@@ -1,0 +1,6 @@
+{
+  "name": "Kashkha Fashions – Abaya Factory & Clothing ERP/POS",
+  "description": "Enterprise ERP & POS management system for luxury abaya and garment ateliers in the United Arab Emirates, featuring double-entry bookkeeping, 7-stage production workflow, BOM catalogs, and inventory.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,266 @@
+{
+  "entities": {
+    "Settings": {
+      "title": "Settings",
+      "description": "Atelier global configuration, UAE VAT rate, company profile",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string", "maxLength": 100 },
+        "tradeLicenseNumber": { "type": "string", "maxLength": 50 },
+        "trn": { "type": "string", "maxLength": 30 },
+        "vatRate": { "type": "number" },
+        "currency": { "type": "string", "maxLength": 5 },
+        "address": { "type": "string", "maxLength": 200 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "email": { "type": "string", "maxLength": 100 },
+        "isInitialized": { "type": "boolean" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["companyName", "currency", "vatRate"]
+    },
+    "Account": {
+      "title": "Account",
+      "description": "Double-entry general ledger account in the chart of accounts",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "maxLength": 20 },
+        "nameAr": { "type": "string", "maxLength": 100 },
+        "nameEn": { "type": "string", "maxLength": 100 },
+        "nameFr": { "type": "string", "maxLength": 100 },
+        "type": { "type": "string", "enum": ["asset", "liability", "equity", "revenue", "cogs", "expense"] },
+        "category": { "type": "string", "maxLength": 50 },
+        "balance": { "type": "number" },
+        "isSystem": { "type": "boolean" },
+        "description": { "type": "string", "maxLength": 200 }
+      },
+      "required": ["code", "type", "balance"]
+    },
+    "JournalEntry": {
+      "title": "JournalEntry",
+      "description": "Immutable general journal transaction with balanced debits and credits",
+      "type": "object",
+      "properties": {
+        "entryNumber": { "type": "string", "maxLength": 30 },
+        "date": { "type": "string" },
+        "description": { "type": "string", "maxLength": 300 },
+        "referenceType": { "type": "string", "maxLength": 50 },
+        "referenceId": { "type": "string", "maxLength": 100 },
+        "totalAmount": { "type": "number" },
+        "lines": { "type": "array" },
+        "postedBy": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["entryNumber", "date", "description", "totalAmount", "lines"]
+    },
+    "Model": {
+      "title": "Model",
+      "description": "Abaya or clothing model specifications and Bill of Materials",
+      "type": "object",
+      "properties": {
+        "modelCode": { "type": "string", "maxLength": 30 },
+        "nameAr": { "type": "string", "maxLength": 100 },
+        "nameEn": { "type": "string", "maxLength": 100 },
+        "nameFr": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "enum": ["Draft", "Approved", "InProduction", "Discontinued"] },
+        "images": { "type": "array" },
+        "sizes": { "type": "array" },
+        "colors": { "type": "array" },
+        "fabricConsumptionMeters": { "type": "number" },
+        "bom": { "type": "array" },
+        "productionNotes": { "type": "string", "maxLength": 1000 },
+        "estimatedMaterialCost": { "type": "number" },
+        "estimatedLaborCost": { "type": "number" },
+        "totalCost": { "type": "number" },
+        "wholesalePrice": { "type": "number" },
+        "retailPrice": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["modelCode", "nameAr", "retailPrice"]
+    },
+    "ProductionOrder": {
+      "title": "ProductionOrder",
+      "description": "Atelier job ticket moving through the 7 manufacturing stages",
+      "type": "object",
+      "properties": {
+        "orderNumber": { "type": "string", "maxLength": 30 },
+        "modelId": { "type": "string", "maxLength": 100 },
+        "modelCode": { "type": "string", "maxLength": 50 },
+        "modelName": { "type": "string", "maxLength": 100 },
+        "customerOrderId": { "type": "string", "maxLength": 100 },
+        "quantity": { "type": "number" },
+        "size": { "type": "string", "maxLength": 20 },
+        "color": { "type": "string", "maxLength": 50 },
+        "currentStage": { "type": "string", "enum": ["New", "Cutting", "Sewing", "Embroidery", "Ironing", "Ready", "Delivered"] },
+        "assignedTailor": { "type": "string", "maxLength": 100 },
+        "assignedTailorId": { "type": "string", "maxLength": 100 },
+        "priority": { "type": "string", "enum": ["Normal", "High", "Urgent"] },
+        "notes": { "type": "string", "maxLength": 500 },
+        "materialsIssued": { "type": "boolean" },
+        "stageHistory": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "deliveryDate": { "type": "string" }
+      },
+      "required": ["orderNumber", "modelCode", "quantity", "currentStage"]
+    },
+    "InventoryItem": {
+      "title": "InventoryItem",
+      "description": "Raw materials (fabrics, trims, crystals) and finished abayas",
+      "type": "object",
+      "properties": {
+        "sku": { "type": "string", "maxLength": 50 },
+        "nameAr": { "type": "string", "maxLength": 100 },
+        "nameEn": { "type": "string", "maxLength": 100 },
+        "nameFr": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "enum": ["Fabric", "Lace_Trim", "Beads_Crystals", "Thread_Accessories", "Packaging", "Finished_Product"] },
+        "unit": { "type": "string", "maxLength": 20 },
+        "currentStock": { "type": "number" },
+        "minStockAlert": { "type": "number" },
+        "unitCost": { "type": "number" },
+        "warehouseLocation": { "type": "string", "maxLength": 50 },
+        "supplierId": { "type": "string", "maxLength": 100 },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["sku", "nameAr", "category", "unit", "currentStock", "unitCost"]
+    },
+    "StockMovement": {
+      "title": "StockMovement",
+      "description": "Audit trail record of every inventory receipt, issue, or adjustment",
+      "type": "object",
+      "properties": {
+        "movementNumber": { "type": "string", "maxLength": 30 },
+        "itemId": { "type": "string", "maxLength": 100 },
+        "itemSku": { "type": "string", "maxLength": 50 },
+        "type": { "type": "string", "enum": ["PurchaseReceipt", "ProductionIssue", "SalesDelivery", "Adjustment", "Return"] },
+        "quantity": { "type": "number" },
+        "unitCost": { "type": "number" },
+        "referenceDoc": { "type": "string", "maxLength": 100 },
+        "notes": { "type": "string", "maxLength": 200 },
+        "userId": { "type": "string", "maxLength": 100 },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["movementNumber", "itemId", "type", "quantity"]
+    },
+    "SalesInvoice": {
+      "title": "SalesInvoice",
+      "description": "UAE VAT-compliant tax invoice for wholesale and retail sales",
+      "type": "object",
+      "properties": {
+        "invoiceNumber": { "type": "string", "maxLength": 30 },
+        "date": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "customerId": { "type": "string", "maxLength": 100 },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "saleType": { "type": "string", "enum": ["Retail", "Wholesale"] },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "vatAmount": { "type": "number" },
+        "grandTotal": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "Card", "BankTransfer", "Credit", "Mixed"] },
+        "paymentStatus": { "type": "string", "enum": ["Pending", "Partial", "Paid"] },
+        "productionStatus": { "type": "string", "maxLength": 50 },
+        "customMeasurements": { "type": "object" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["invoiceNumber", "date", "saleType", "subtotal", "vatAmount", "grandTotal", "paymentStatus"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Boutique retail clients and wholesale distributors",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "maxLength": 30 },
+        "name": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "email": { "type": "string", "maxLength": 100 },
+        "trn": { "type": "string", "maxLength": 30 },
+        "type": { "type": "string", "enum": ["Retail", "Wholesale"] },
+        "creditLimit": { "type": "number" },
+        "currentBalance": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 300 }
+      },
+      "required": ["code", "name", "type"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Fabric mills, lace suppliers, and accessories vendors",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "maxLength": 30 },
+        "companyName": { "type": "string", "maxLength": 100 },
+        "contactName": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "email": { "type": "string", "maxLength": 100 },
+        "trn": { "type": "string", "maxLength": 30 },
+        "paymentTerms": { "type": "string", "maxLength": 50 },
+        "currentBalance": { "type": "number" }
+      },
+      "required": ["code", "companyName"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "Atelier tailors, cutters, embroiderers, and management staff",
+      "type": "object",
+      "properties": {
+        "empCode": { "type": "string", "maxLength": 30 },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["MasterCutter", "Tailor", "Embroiderer", "IronerFinisher", "Accountant", "SalesAssociate", "Supervisor", "Manager"] },
+        "phone": { "type": "string", "maxLength": 30 },
+        "salaryType": { "type": "string", "enum": ["Monthly", "PieceRate", "Mixed"] },
+        "baseSalary": { "type": "number" },
+        "pieceRatePerPiece": { "type": "number" },
+        "hireDate": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["empCode", "fullName", "role", "salaryType"]
+    }
+  },
+  "firestore": {
+    "/settings/{settingId}": {
+      "schema": "Settings",
+      "description": "Global application configurations"
+    },
+    "/accounts/{accountId}": {
+      "schema": "Account",
+      "description": "Chart of accounts general ledger definitions"
+    },
+    "/journalEntries/{entryId}": {
+      "schema": "JournalEntry",
+      "description": "General journal audit ledger records"
+    },
+    "/models/{modelId}": {
+      "schema": "Model",
+      "description": "Garment and abaya model specifications"
+    },
+    "/productionOrders/{orderId}": {
+      "schema": "ProductionOrder",
+      "description": "Workshop production stages and job tickets"
+    },
+    "/inventoryItems/{itemId}": {
+      "schema": "InventoryItem",
+      "description": "Warehouse materials and finished stock"
+    },
+    "/stockMovements/{movementId}": {
+      "schema": "StockMovement",
+      "description": "Physical stock movement transaction logs"
+    },
+    "/salesInvoices/{invoiceId}": {
+      "schema": "SalesInvoice",
+      "description": "Tax sales invoices and POS orders"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Clients and wholesale accounts"
+    },
+    "/suppliers/{supplierId}": {
+      "schema": "Supplier",
+      "description": "Fabric mills and trim vendors"
+    },
+    "/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "Atelier workforce and production labor profiles"
+    }
+  }
+}
