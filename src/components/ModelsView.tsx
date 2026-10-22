@@ -92,7 +92,7 @@ export const ModelsView: React.FC = () => {
     if (!files || files.length === 0) return;
     const file = files[0];
     if (file.size > 8 * 1024 * 1024) {
-      alert(`تنبيه: حجم ملف الفيديو (${(file.size / (1024 * 1024)).toFixed(1)} ميغابايت) كبير نسبياً. يُفضل استخدام مقاطع فيديو قصيرة (أقل من 5 ميغابايت) لضمان سرعة الحفظ السحابي وعدم تجاوز حدود المستندات.`);
+      alert(`تنبيه: حجم ملف الفيديو (${(file.size / (1024 * 1024)).toFixed(1)} ميغابايت) كبير نسبياً. يُفضل استخدام مقاطع فيديو قصيرة (أقل من 5 ميغابايت) لضمان سرعة الحفظ والمعالجة السليمة.`);
     }
     const reader = new FileReader();
     reader.onload = (event) => {

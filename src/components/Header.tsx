@@ -20,6 +20,8 @@ import {
   Mail,
   ExternalLink,
   LogOut,
+  AlertTriangle,
+  X,
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -46,6 +48,10 @@ export const Header: React.FC = () => {
   };
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [formData, setFormData] = useState({
     companyName: getCleanCompanyName(settings.companyName),
     tradeLicenseNumber: settings.tradeLicenseNumber || '',
@@ -174,10 +180,10 @@ export const Header: React.FC = () => {
               </button>
             </div>
 
-            {/* Cloud Persistence Indicator */}
+            {/* System Connection Indicator */}
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-[#131B26] border border-[#1E293B] rounded-xl text-xs text-slate-400">
               <span className={`w-2 h-2 rounded-full ${isFirebaseConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-              <span className="font-mono text-[11px]">سحابي مباشر</span>
+              <span className="font-mono text-[11px]">النظام متصل</span>
             </div>
 
             {/* PWA Direct Install Button */}
@@ -187,7 +193,7 @@ export const Header: React.FC = () => {
             <button
               onClick={handleOpenSettings}
               title="بيانات المنشأة الرسمية والسجل التجاري"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C5A059]/15 hover:bg-[#C5A059]/25 text-[#E2C785] border border-[#C5A059]/40 rounded-xl text-xs font-semibold transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C5A059]/15 hover:bg-[#C5A059]/25 text-[#E2C785] border border-[#C5A059]/40 rounded-xl text-xs font-semibold transition-all shadow-sm cursor-pointer"
             >
               <Building2 className="w-3.5 h-3.5 text-[#C5A059]" />
               <span className="hidden sm:inline">بيانات المنشأة</span>
@@ -218,29 +224,21 @@ export const Header: React.FC = () => {
                 </div>
 
                 <button
-                  onClick={() => {
-                    if (window.confirm('هل تريد تسجيل الخروج من نظام كشخة فاشنز؟')) {
-                      logout();
-                    }
-                  }}
+                  onClick={() => setIsLogoutModalOpen(true)}
                   title="تسجيل الخروج من النظام"
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 border border-rose-900/40 rounded-xl transition-colors font-medium"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-300 hover:text-white bg-rose-950/30 hover:bg-rose-900/60 border border-rose-800/50 hover:border-rose-600 rounded-xl transition-all font-medium cursor-pointer shadow-sm active:scale-95"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline text-[11px]">خروج</span>
+                  <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                  <span className="text-[11px] font-semibold">خروج</span>
                 </button>
               </div>
             )}
 
             {/* Reset to Clean Zero State */}
             <button
-              onClick={() => {
-                if (window.confirm('هل تريد تصفير جميع السجلات والبدء بقاعدة بيانات جديدة كلياً؟')) {
-                  resetToZeroState();
-                }
-              }}
+              onClick={() => setIsResetModalOpen(true)}
               title="تصفير البيانات والبدء بنظام فارغ"
-              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-[#131B26] rounded-xl transition-colors border border-transparent hover:border-[#1E293B]"
+              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-[#131B26] rounded-xl transition-colors border border-transparent hover:border-[#1E293B] cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -417,6 +415,137 @@ export const Header: React.FC = () => {
               >
                 <Check className="w-4 h-4" />
                 <span>حفظ البيانات</span>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Logout Warning Confirmation Modal */}
+      {isLogoutModalOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md">
+          <div
+            className="fixed inset-0"
+            onClick={() => {
+              if (!isLoggingOut) setIsLogoutModalOpen(false);
+            }}
+            aria-hidden="true"
+          />
+
+          <div className="relative z-10 w-full max-w-md bg-[#0E1523] border-2 border-rose-500/50 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95),0_0_35px_rgba(244,63,94,0.15)] p-6 my-auto text-slate-100 space-y-5 ring-1 ring-rose-500/30 text-center">
+            {/* Warning Icon Badge */}
+            <div className="flex justify-center">
+              <div className="w-16 h-16 rounded-full bg-rose-950/60 border-2 border-rose-500/50 flex items-center justify-center text-rose-400 shadow-lg shadow-rose-950/50">
+                <AlertTriangle className="w-8 h-8 text-rose-400 stroke-[2.2]" />
+              </div>
+            </div>
+
+            {/* Warning Title & Body */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold font-serif text-white tracking-wide">
+                تأكيد تسجيل الخروج
+              </h3>
+              <p className="text-sm font-semibold text-rose-300">
+                هل أنت متأكد من رغبتك في تسجيل الخروج من نظام كشخة فاشنز؟
+              </p>
+              <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
+                سيتم إنهاء جلستك الحالية والعودة إلى شاشة تسجيل الدخول. ستحتاج لتسجيل الدخول مجدداً بحسابك المعتمد لمتابعة العمليات وسجلات المنشأة.
+              </p>
+            </div>
+
+            {/* Account Info Pill */}
+            {currentUser && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#182334] border border-[#2A3B53] text-xs text-slate-300 max-w-full truncate font-mono">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="truncate">{currentUser.email || currentUser.displayName}</span>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row-reverse items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isLoggingOut}
+                onClick={async () => {
+                  setIsLoggingOut(true);
+                  await logout();
+                  setIsLoggingOut(false);
+                  setIsLogoutModalOpen(false);
+                }}
+                className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 active:scale-95 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-rose-900/40 cursor-pointer disabled:opacity-50"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>{isLoggingOut ? 'جارٍ تسجيل الخروج...' : 'نعم، تسجيل الخروج'}</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isLoggingOut}
+                onClick={() => setIsLogoutModalOpen(false)}
+                className="w-full sm:w-auto px-5 py-3 bg-[#182334] hover:bg-slate-700 active:scale-95 text-slate-300 text-xs font-medium rounded-xl transition-colors cursor-pointer"
+              >
+                إلغاء والعودة
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Reset Data Warning Confirmation Modal */}
+      {isResetModalOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md">
+          <div
+            className="fixed inset-0"
+            onClick={() => {
+              if (!isResetting) setIsResetModalOpen(false);
+            }}
+            aria-hidden="true"
+          />
+
+          <div className="relative z-10 w-full max-w-md bg-[#0E1523] border-2 border-amber-500/50 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] p-6 my-auto text-slate-100 space-y-5 ring-1 ring-amber-500/30 text-center">
+            <div className="flex justify-center">
+              <div className="w-16 h-16 rounded-full bg-amber-950/60 border-2 border-amber-500/50 flex items-center justify-center text-amber-400">
+                <RotateCcw className="w-8 h-8 text-amber-400" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold font-serif text-white tracking-wide">
+                تأكيد تصفير البيانات
+              </h3>
+              <p className="text-sm font-semibold text-amber-300">
+                هل تريد تصفير جميع السجلات والبدء بقاعدة بيانات جديدة كلياً؟
+              </p>
+              <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
+                هذا الإجراء سيقوم بتصفير الحسابات والكتالوج والإنتاج والمخزون للبدء بنظام نظيف وجديد.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row-reverse items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isResetting}
+                onClick={async () => {
+                  setIsResetting(true);
+                  await resetToZeroState();
+                  setIsResetting(false);
+                  setIsResetModalOpen(false);
+                }}
+                className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 active:scale-95 text-white text-xs font-bold rounded-xl transition-all shadow-lg cursor-pointer disabled:opacity-50"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>{isResetting ? 'جارٍ تصفير السجلات...' : 'نعم، تصفير السجلات'}</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isResetting}
+                onClick={() => setIsResetModalOpen(false)}
+                className="w-full sm:w-auto px-5 py-3 bg-[#182334] hover:bg-slate-700 active:scale-95 text-slate-300 text-xs font-medium rounded-xl transition-colors cursor-pointer"
+              >
+                إلغاء وتراجع
               </button>
             </div>
           </div>

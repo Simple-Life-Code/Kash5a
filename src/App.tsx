@@ -41,12 +41,12 @@ const MainLayout: React.FC = () => {
     return <LoginPage />;
   }
 
-  // 3. Initial Cloud Database synchronization loader
+  // 3. Initial database load
   if (isLoading) {
     return (
       <LogoLoader
         title={cleanCompanyName}
-        subtitle="جارٍ تحميل ومزامنة سجلات المنشأة..."
+        subtitle="جارٍ تحميل سجلات المنشأة..."
         size="lg"
         fullScreen={true}
       />
@@ -100,7 +100,7 @@ const MainLayout: React.FC = () => {
                 </div>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                منظومة سحابية متكاملة لإدارة خطوط إنتاج العبايات، مستودع الأقمشة، ونظام القيد المزدوج المحاسبي بدولة الإمارات.
+                منظومة رقمية متكاملة لإدارة خطوط إنتاج العبايات، مستودع الأقمشة، ونظام القيد المزدوج المحاسبي بدولة الإمارات.
               </p>
             </div>
 

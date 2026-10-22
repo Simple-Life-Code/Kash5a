@@ -108,7 +108,7 @@ export const LoginPage: React.FC = () => {
 
             <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 pt-1">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>اتصال سحابي آمن ومشفر عبر خوادم Google Cloud</span>
+              <span>بوابة دخول رقمية مشفرة ومؤمنة بالكامل</span>
             </div>
           </div>
         </div>
