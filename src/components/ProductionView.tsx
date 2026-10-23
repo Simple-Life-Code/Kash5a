@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useErp } from '../context/ErpContext';
 import { getTranslation } from '../i18n/translations';
 import { ProductionOrder, ProductionStage } from '../types/erp';
@@ -12,7 +12,9 @@ import {
   ArrowLeft,
   AlertCircle,
   FileCheck,
+  X,
 } from 'lucide-react';
+import { registerGlobalModal } from '../hooks/useGlobalNavigation';
 
 const STAGES: { stage: ProductionStage; labelAr: string; labelEn: string; color: string }[] = [
   { stage: 'New', labelAr: '1. طلب جديد', labelEn: '1. New Order', color: 'border-slate-700 bg-slate-900/40 text-slate-300' },
@@ -37,6 +39,14 @@ export const ProductionView: React.FC = () => {
 
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [selectedOrderForHistory, setSelectedOrderForHistory] = useState<ProductionOrder | null>(null);
+
+  useEffect(() => {
+    if (isNewOrderModalOpen) return registerGlobalModal(() => setIsNewOrderModalOpen(false));
+  }, [isNewOrderModalOpen]);
+
+  useEffect(() => {
+    if (selectedOrderForHistory) return registerGlobalModal(() => setSelectedOrderForHistory(null));
+  }, [selectedOrderForHistory]);
 
   // New Order Form State
   const [selectedModelId, setSelectedModelId] = useState('');
@@ -230,9 +240,9 @@ export const ProductionView: React.FC = () => {
 
       {/* Production History Modal */}
       {selectedOrderForHistory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-lg bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 overflow-y-auto">
+          <div className="relative w-full max-w-lg max-h-[92vh] flex flex-col bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl overflow-hidden my-auto">
+            <div className="flex items-center justify-between border-b border-slate-800 p-4 shrink-0 bg-[#0F172A]">
               <div>
                 <span className="font-mono text-xs font-bold text-[#E2C785] px-2 py-0.5 rounded bg-[#C5A059]/20">
                   {selectedOrderForHistory.orderNumber}
@@ -242,14 +252,15 @@ export const ProductionView: React.FC = () => {
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedOrderForHistory(null)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-white p-1"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
               {selectedOrderForHistory.stageHistory.map((log, idx) => (
                 <div key={idx} className="flex items-start gap-3 p-3 bg-[#131B26] border border-slate-800 rounded-xl">
                   <div className="w-7 h-7 rounded-full bg-[#C5A059]/20 text-[#E2C785] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
@@ -277,10 +288,11 @@ export const ProductionView: React.FC = () => {
               ))}
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end p-3 sm:p-4 border-t border-slate-800 shrink-0 bg-[#0A0E17]">
               <button
+                type="button"
                 onClick={() => setSelectedOrderForHistory(null)}
-                className="px-5 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl"
+                className="px-5 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl cursor-pointer"
               >
                 إغلاق
               </button>
@@ -291,22 +303,25 @@ export const ProductionView: React.FC = () => {
 
       {/* New Production Order Modal */}
       {isNewOrderModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-xl bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-xl max-h-[92vh] bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-100">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0 bg-[#0B0F17]">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                 <Scissors className="w-5 h-5 text-[#C5A059]" />
                 إنشاء أمر تفصيل عباية جديد بالورشة
               </h3>
               <button
+                type="button"
                 onClick={() => setIsNewOrderModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 text-lg font-bold"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 text-xs">
               <div>
                 <label className="block text-slate-400 mb-1">الموديل المطلوب تفصيله *</label>
                 <select
@@ -331,7 +346,7 @@ export const ProductionView: React.FC = () => {
                     placeholder="مثال: الشيخة مريم..."
                     value={customerName}
                     onChange={e => setCustomerName(e.target.value)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white"
                   />
                 </div>
                 <div>
@@ -341,7 +356,7 @@ export const ProductionView: React.FC = () => {
                     min="1"
                     value={quantity}
                     onChange={e => setQuantity(Number(e.target.value) || 1)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white font-mono"
                   />
                 </div>
               </div>
@@ -352,7 +367,7 @@ export const ProductionView: React.FC = () => {
                   <select
                     value={size}
                     onChange={e => setSize(e.target.value)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white font-mono"
                   >
                     {['50', '52', '54', '56', '58', '60', '62', 'Custom'].map(sz => (
                       <option key={sz} value={sz}>{sz}</option>
@@ -365,18 +380,18 @@ export const ProductionView: React.FC = () => {
                     type="text"
                     value={color}
                     onChange={e => setColor(e.target.value)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-400 mb-1">إسناد للخياط / المشرف</label>
                   <select
                     value={assignedTailorId}
                     onChange={e => setAssignedTailorId(e.target.value)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white"
                   >
                     <option value="">-- اختر خياط الورشة --</option>
                     {employees.filter(e => ['Tailor', 'MasterCutter', 'Embroiderer'].includes(e.role)).map(e => (
@@ -391,7 +406,7 @@ export const ProductionView: React.FC = () => {
                   <select
                     value={priority}
                     onChange={e => setPriority(e.target.value as any)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white"
                   >
                     <option value="Normal">عادي (Normal)</option>
                     <option value="High">عالي (High)</option>
@@ -407,23 +422,24 @@ export const ProductionView: React.FC = () => {
                   placeholder="ملاحظات العميل، تفريغ الصدر، طول الأكمام..."
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white"
+                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white resize-none"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-slate-800 shrink-0 bg-[#0B0F17]">
               <button
                 type="button"
                 onClick={() => setIsNewOrderModalOpen(false)}
-                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl"
+                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl cursor-pointer"
               >
                 إلغاء
               </button>
               <button
                 type="button"
                 onClick={handleCreateOrder}
-                className="px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl shadow-lg shadow-[#C5A059]/20"
+                className="px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl shadow-lg shadow-[#C5A059]/20 cursor-pointer"
               >
                 توليد أمر التشغيل
               </button>

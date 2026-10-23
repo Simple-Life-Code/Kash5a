@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useErp } from '../context/ErpContext';
 import { getTranslation } from '../i18n/translations';
 import { Account, JournalLine } from '../types/erp';
@@ -15,6 +15,7 @@ import {
   FileSpreadsheet,
 } from 'lucide-react';
 import { exportToExcel } from '../utils/excelExport';
+import { registerGlobalModal } from '../hooks/useGlobalNavigation';
 
 export const AccountingView: React.FC = () => {
   const { lang, accounts, journalEntries, postJournalEntry } = useErp();
@@ -24,6 +25,10 @@ export const AccountingView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isPostingModalOpen, setIsPostingModalOpen] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isPostingModalOpen) return registerGlobalModal(() => setIsPostingModalOpen(false));
+  }, [isPostingModalOpen]);
 
   // New Journal Entry Form State
   const [entryDate, setEntryDate] = useState(new Date().toISOString().split('T')[0]);
@@ -629,153 +634,159 @@ export const AccountingView: React.FC = () => {
 
       {/* Post Balanced Journal Entry Modal */}
       {isPostingModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-3xl bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-3xl max-h-[92vh] bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-100">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0 bg-[#0B0F17]">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-[#C5A059]" />
                 ترحيل قيد يومية متوازن جديد (Double-Entry General Journal)
               </h3>
               <button
+                type="button"
                 onClick={() => setIsPostingModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 text-lg font-bold"
               >
                 ✕
               </button>
             </div>
 
-            {postError && (
-              <div className="p-3 bg-rose-500/15 border border-rose-500/40 rounded-lg text-rose-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{postError}</span>
-              </div>
-            )}
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
+              {postError && (
+                <div className="p-3 bg-rose-500/15 border border-rose-500/40 rounded-lg text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{postError}</span>
+                </div>
+              )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div>
-                <label className="block text-slate-400 mb-1">تاريخ القيد</label>
-                <input
-                  type="date"
-                  value={entryDate}
-                  onChange={e => setEntryDate(e.target.value)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 mb-1">تاريخ القيد</label>
+                  <input
+                    type="date"
+                    value={entryDate}
+                    onChange={e => setEntryDate(e.target.value)}
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-400 mb-1">وصف وبيان العملية المالية</label>
+                  <input
+                    type="text"
+                    placeholder="مثال: شراء أقمشة ندى وسداد إيجار الورشة..."
+                    value={entryDescription}
+                    onChange={e => setEntryDescription(e.target.value)}
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#C5A059]"
+                  />
+                </div>
               </div>
-              <div className="sm:col-span-2">
-                <label className="block text-slate-400 mb-1">وصف وبيان العملية المالية</label>
-                <input
-                  type="text"
-                  placeholder="مثال: شراء أقمشة ندى وسداد إيجار الورشة..."
-                  value={entryDescription}
-                  onChange={e => setEntryDescription(e.target.value)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-[#C5A059]"
-                />
-              </div>
-            </div>
 
-            {/* Journal Lines Table */}
-            <div className="border border-slate-800 rounded-xl overflow-hidden">
-              <table className="w-full text-xs text-right">
-                <thead className="bg-[#0B0F17] text-slate-400 border-b border-slate-800">
-                  <tr>
-                    <th className="py-2 px-3">الحساب</th>
-                    <th className="py-2 px-3">ملاحظة فرعية (Memo)</th>
-                    <th className="py-2 px-3 text-left rtl:text-left w-28">مدين (Debit)</th>
-                    <th className="py-2 px-3 text-left rtl:text-left w-28">دائن (Credit)</th>
-                    <th className="py-2 px-2 text-center w-10"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 bg-[#131B26]">
-                  {lines.map((line, idx) => (
-                    <tr key={idx}>
-                      <td className="p-2">
-                        <select
-                          value={line.accountId || line.accountCode}
-                          onChange={e => handleLineAccountChange(idx, e.target.value)}
-                          className="w-full bg-[#1E293B] border border-slate-700 rounded px-2 py-1 text-white text-xs"
-                        >
-                          <option value="">-- اختر الحساب من شجرة الحسابات --</option>
-                          {accounts.map(acc => (
-                            <option key={acc.id} value={acc.id}>
-                              {acc.code} - {acc.nameAr}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="p-2">
-                        <input
-                          type="text"
-                          placeholder="ملاحظة السطر..."
-                          value={line.memo || ''}
-                          onChange={e => handleLineValueChange(idx, 'memo', e.target.value)}
-                          className="w-full bg-[#1E293B] border border-slate-700 rounded px-2 py-1 text-white text-xs"
-                        />
-                      </td>
-                      <td className="p-2">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={line.debit || ''}
-                          onChange={e => handleLineValueChange(idx, 'debit', e.target.value)}
-                          className="w-full bg-[#1E293B] border border-slate-700 rounded px-2 py-1 text-white font-mono text-xs text-left"
-                        />
-                      </td>
-                      <td className="p-2">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={line.credit || ''}
-                          onChange={e => handleLineValueChange(idx, 'credit', e.target.value)}
-                          className="w-full bg-[#1E293B] border border-slate-700 rounded px-2 py-1 text-white font-mono text-xs text-left"
-                        />
-                      </td>
-                      <td className="p-2 text-center">
-                        <button
-                          type="button"
-                          onClick={() => removeLine(idx)}
-                          className="text-slate-500 hover:text-rose-400 font-bold"
-                        >
-                          ✕
-                        </button>
-                      </td>
+              {/* Journal Lines Table with Horizontal Scroll */}
+              <div className="border border-slate-800 rounded-xl overflow-x-auto">
+                <table className="w-full min-w-[550px] text-xs text-right">
+                  <thead className="bg-[#0B0F17] text-slate-400 border-b border-slate-800">
+                    <tr>
+                      <th className="py-2.5 px-3">الحساب</th>
+                      <th className="py-2.5 px-3">ملاحظة فرعية (Memo)</th>
+                      <th className="py-2.5 px-3 text-left rtl:text-left w-28">مدين (Debit)</th>
+                      <th className="py-2.5 px-3 text-left rtl:text-left w-28">دائن (Credit)</th>
+                      <th className="py-2.5 px-2 text-center w-10"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 bg-[#131B26]">
+                    {lines.map((line, idx) => (
+                      <tr key={idx}>
+                        <td className="p-2">
+                          <select
+                            value={line.accountId || line.accountCode}
+                            onChange={e => handleLineAccountChange(idx, e.target.value)}
+                            className="w-full bg-[#1E293B] border border-slate-700 rounded px-2 py-1.5 text-white text-xs"
+                          >
+                            <option value="">-- اختر الحساب من شجرة الحسابات --</option>
+                            {accounts.map(acc => (
+                              <option key={acc.id} value={acc.id}>
+                                {acc.code} - {acc.nameAr}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="text"
+                            placeholder="ملاحظة السطر..."
+                            value={line.memo || ''}
+                            onChange={e => handleLineValueChange(idx, 'memo', e.target.value)}
+                            className="w-full bg-[#1E293B] border border-slate-700 rounded px-2 py-1.5 text-white text-xs"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={line.debit || ''}
+                            onChange={e => handleLineValueChange(idx, 'debit', e.target.value)}
+                            className="w-full bg-[#1E293B] border border-slate-700 rounded px-2 py-1.5 text-white font-mono text-xs text-left"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={line.credit || ''}
+                            onChange={e => handleLineValueChange(idx, 'credit', e.target.value)}
+                            className="w-full bg-[#1E293B] border border-slate-700 rounded px-2 py-1.5 text-white font-mono text-xs text-left"
+                          />
+                        </td>
+                        <td className="p-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => removeLine(idx)}
+                            className="text-slate-500 hover:text-rose-400 font-bold p-1"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={addLine}
-                className="text-xs text-[#C5A059] hover:underline flex items-center gap-1"
-              >
-                + إضافة طرف قيد جديد
-              </button>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={addLine}
+                  className="text-xs text-[#C5A059] hover:underline flex items-center gap-1 font-medium cursor-pointer"
+                >
+                  + إضافة طرف قيد جديد
+                </button>
 
-              {/* Balance Summary Bar */}
-              <div className="flex items-center gap-6 font-mono text-xs">
-                <div>
-                  <span className="text-slate-400 mr-2">إجمالي المدين:</span>
-                  <span className="text-white font-bold">{totalDebits.toFixed(2)} AED</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 mr-2">إجمالي الدائن:</span>
-                  <span className="text-white font-bold">{totalCredits.toFixed(2)} AED</span>
-                </div>
-                <div className={`px-2.5 py-1 rounded text-xs font-sans font-semibold ${isBalanced ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
-                  {isBalanced ? 'متوازن 100%' : `الفرق: ${(totalDebits - totalCredits).toFixed(2)}`}
+                {/* Balance Summary Bar */}
+                <div className="flex flex-wrap items-center gap-3 sm:gap-6 font-mono text-xs">
+                  <div>
+                    <span className="text-slate-400 mr-2">إجمالي المدين:</span>
+                    <span className="text-white font-bold">{totalDebits.toFixed(2)} AED</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 mr-2">إجمالي الدائن:</span>
+                    <span className="text-white font-bold">{totalCredits.toFixed(2)} AED</span>
+                  </div>
+                  <div className={`px-2.5 py-1 rounded text-xs font-sans font-semibold ${isBalanced ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                    {isBalanced ? 'متوازن 100%' : `الفرق: ${(totalDebits - totalCredits).toFixed(2)}`}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-slate-800 shrink-0 bg-[#0B0F17]">
               <button
                 type="button"
                 onClick={() => setIsPostingModalOpen(false)}
-                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl"
+                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl cursor-pointer"
               >
                 إلغاء
               </button>
@@ -783,7 +794,7 @@ export const AccountingView: React.FC = () => {
                 type="button"
                 onClick={handleSaveEntry}
                 disabled={!isBalanced}
-                className={`px-5 py-2 text-xs font-bold rounded-xl transition-all ${
+                className={`px-5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                   isBalanced
                     ? 'bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] shadow-lg shadow-[#C5A059]/20'
                     : 'bg-slate-800 text-slate-500 cursor-not-allowed'

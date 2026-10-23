@@ -1,17 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
+declare global {
+  interface Window {
+    __deferredPwaPrompt?: BeforeInstallPromptEvent | null;
+  }
+}
+
+export type InstallResult = 'accepted' | 'dismissed' | 'manual_guide' | 'already_installed';
+
 export function usePWAInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
+    return typeof window !== 'undefined' ? window.__deferredPwaPrompt || null : null;
+  });
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
   const [justInstalled, setJustInstalled] = useState<boolean>(false);
+  const [isIOS, setIsIOS] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if running in standalone mode (already installed on phone or desktop)
+    // 1. Check if running in standalone mode (already installed on phone or desktop)
     const checkStandalone = () => {
       const isStandaloneMode =
         window.matchMedia('(display-mode: standalone)').matches ||
@@ -24,53 +35,81 @@ export function usePWAInstall() {
 
     checkStandalone();
 
+    // 2. Check iOS platform
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isAppleDevice = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(isAppleDevice);
+
+    // 3. Check for early captured prompt
+    if (window.__deferredPwaPrompt) {
+      setDeferredPrompt(window.__deferredPwaPrompt);
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      window.__deferredPwaPrompt = promptEvent;
+      setDeferredPrompt(promptEvent);
+    };
+
+    const handlePromptAvailable = () => {
+      if (window.__deferredPwaPrompt) {
+        setDeferredPrompt(window.__deferredPwaPrompt);
+      }
     };
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setJustInstalled(true);
       setDeferredPrompt(null);
+      window.__deferredPwaPrompt = null;
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-prompt-available', handlePromptAvailable);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-prompt-available', handlePromptAvailable);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
-  const triggerDirectInstall = async () => {
-    if (deferredPrompt) {
+  const triggerDirectInstall = useCallback(async (): Promise<InstallResult> => {
+    if (isInstalled) {
+      return 'already_installed';
+    }
+
+    const activePrompt = deferredPrompt || window.__deferredPwaPrompt;
+
+    if (activePrompt) {
       try {
-        await deferredPrompt.prompt();
-        const choice = await deferredPrompt.userChoice;
+        await activePrompt.prompt();
+        const choice = await activePrompt.userChoice;
         if (choice.outcome === 'accepted') {
           setIsInstalled(true);
           setJustInstalled(true);
           setDeferredPrompt(null);
-          return true;
+          window.__deferredPwaPrompt = null;
+          return 'accepted';
         }
+        return 'dismissed';
       } catch (err) {
-        console.warn('Install prompt error:', err);
+        console.warn('Direct PWA prompt error:', err);
+        return 'manual_guide';
       }
-    } else {
-      // If prompt is not available, mark installed feedback directly without any modal
-      setIsInstalled(true);
-      setJustInstalled(true);
-      return true;
     }
-    return false;
-  };
+
+    // No native prompt available (iOS Safari, or already installed, or browser restriction)
+    return 'manual_guide';
+  }, [deferredPrompt, isInstalled]);
 
   return {
-    isInstallable: !!deferredPrompt,
+    isInstallable: !!(deferredPrompt || (typeof window !== 'undefined' && window.__deferredPwaPrompt)),
     isInstalled,
     justInstalled,
+    isIOS,
     triggerDirectInstall,
   };
 }

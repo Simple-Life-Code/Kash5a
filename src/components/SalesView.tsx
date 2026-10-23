@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useErp } from '../context/ErpContext';
 import { getTranslation } from '../i18n/translations';
 import { InvoiceItem, SalesInvoice } from '../types/erp';
@@ -15,7 +15,9 @@ import {
   DollarSign,
   FileCheck,
   FileSpreadsheet,
+  X,
 } from 'lucide-react';
+import { registerGlobalModal } from '../hooks/useGlobalNavigation';
 
 export const SalesView: React.FC<{ onPrintInvoice: (inv: SalesInvoice) => void }> = ({ onPrintInvoice }) => {
   const {
@@ -30,6 +32,10 @@ export const SalesView: React.FC<{ onPrintInvoice: (inv: SalesInvoice) => void }
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isPosModalOpen, setIsPosModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isPosModalOpen) return registerGlobalModal(() => setIsPosModalOpen(false));
+  }, [isPosModalOpen]);
 
   // New Invoice / POS State
   const [saleType, setSaleType] = useState<'Retail' | 'Wholesale'>('Retail');
@@ -307,23 +313,25 @@ export const SalesView: React.FC<{ onPrintInvoice: (inv: SalesInvoice) => void }
 
       {/* POS Terminal & Invoice Builder Modal */}
       {isPosModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-4xl bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 overflow-y-auto">
+          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl overflow-hidden my-auto">
+            <div className="flex items-center justify-between border-b border-slate-800 p-4 shrink-0 bg-[#0F172A]">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-[#C5A059]" />
                 نقطة البيع وإصدار الفاتورة الضريبية (Tax Invoice Terminal)
               </h3>
               <button
+                type="button"
                 onClick={() => setIsPosModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-white p-1"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Header Settings */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              {/* Header Settings */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
               <div>
                 <label className="block text-slate-400 mb-1">نوع العملية</label>
                 <select
@@ -560,8 +568,10 @@ export const SalesView: React.FC<{ onPrintInvoice: (inv: SalesInvoice) => void }
                 </div>
               </div>
             </div>
+            </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            {/* Sticky Footer */}
+            <div className="flex items-center justify-end gap-3 p-3 sm:p-4 border-t border-slate-800 shrink-0 bg-[#0A0E17]">
               <button
                 type="button"
                 onClick={() => setIsPosModalOpen(false)}

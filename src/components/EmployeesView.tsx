@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useErp } from '../context/ErpContext';
 import { getTranslation } from '../i18n/translations';
 import { Employee, EmployeeRole } from '../types/erp';
@@ -12,6 +12,7 @@ import {
   Calendar,
   Phone,
 } from 'lucide-react';
+import { registerGlobalModal } from '../hooks/useGlobalNavigation';
 
 export const EmployeesView: React.FC = () => {
   const { lang, employees, productionOrders, createEmployee, postJournalEntry } = useErp();
@@ -19,6 +20,14 @@ export const EmployeesView: React.FC = () => {
 
   const [isNewEmpModalOpen, setIsNewEmpModalOpen] = useState(false);
   const [isPayrollModalOpen, setIsPayrollModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isNewEmpModalOpen) return registerGlobalModal(() => setIsNewEmpModalOpen(false));
+  }, [isNewEmpModalOpen]);
+
+  useEffect(() => {
+    if (isPayrollModalOpen) return registerGlobalModal(() => setIsPayrollModalOpen(false));
+  }, [isPayrollModalOpen]);
 
   // New Employee State
   const [empCode, setEmpCode] = useState(`EMP-${(employees.length + 1).toString().padStart(2, '0')}`);
@@ -232,84 +241,90 @@ export const EmployeesView: React.FC = () => {
 
       {/* Payroll Modal */}
       {isPayrollModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-2xl bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-2xl max-h-[92vh] bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-100">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0 bg-[#0B0F17]">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-[#C5A059]" />
                 مسير رواتب وأجور خياطي الورشة (Payroll Run)
               </h3>
               <button
+                type="button"
                 onClick={() => setIsPayrollModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 text-lg font-bold"
               >
                 ✕
               </button>
             </div>
 
-            <div className="bg-[#131B26] border border-slate-800 rounded-xl overflow-hidden">
-              <table className="w-full text-xs text-right">
-                <thead className="bg-[#0B0F17] text-slate-400 border-b border-slate-800">
-                  <tr>
-                    <th className="py-2.5 px-3">الاسم / الكود</th>
-                    <th className="py-2.5 px-3">الوظيفة</th>
-                    <th className="py-2.5 px-3 text-left rtl:text-left">الأساسي</th>
-                    <th className="py-2.5 px-3 text-left rtl:text-left">حافز القطعة</th>
-                    <th className="py-2.5 px-3 text-left rtl:text-left font-bold text-white">الصافي المستحق</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 text-slate-200 font-mono">
-                  {employees.map(emp => {
-                    const pieces = emp.completedPiecesThisMonth || 0;
-                    const pieceTotal = pieces * emp.pieceRatePerPiece;
-                    const total = emp.baseSalary + pieceTotal;
-                    return (
-                      <tr key={emp.id} className="hover:bg-[#182333]">
-                        <td className="py-2 px-3 font-sans">
-                          <span className="text-[#E2C785] font-mono mr-1">{emp.empCode}</span> {emp.fullName}
-                        </td>
-                        <td className="py-2 px-3 font-sans text-slate-400">{emp.role}</td>
-                        <td className="py-2 px-3 text-left rtl:text-left">{emp.baseSalary} AED</td>
-                        <td className="py-2 px-3 text-left rtl:text-left text-slate-400">{pieceTotal} AED</td>
-                        <td className="py-2 px-3 text-left rtl:text-left font-bold text-emerald-400">{total} AED</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot className="bg-[#0B0F17] border-t-2 border-[#C5A059]/40 text-xs font-bold text-white">
-                  <tr>
-                    <td colSpan={4} className="py-3 px-3 font-sans text-right">
-                      إجمالي مسير الرواتب المستحق الصرف:
-                    </td>
-                    <td className="py-3 px-3 text-left rtl:text-left font-mono text-[#E2C785] text-sm tabular-nums">
-                      {totalPayrollEst.toLocaleString()} {t.currency}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
+              <div className="bg-[#131B26] border border-slate-800 rounded-xl overflow-x-auto">
+                <table className="w-full min-w-[500px] text-xs text-right">
+                  <thead className="bg-[#0B0F17] text-slate-400 border-b border-slate-800">
+                    <tr>
+                      <th className="py-2.5 px-3">الاسم / الكود</th>
+                      <th className="py-2.5 px-3">الوظيفة</th>
+                      <th className="py-2.5 px-3 text-left rtl:text-left">الأساسي</th>
+                      <th className="py-2.5 px-3 text-left rtl:text-left">حافز القطعة</th>
+                      <th className="py-2.5 px-3 text-left rtl:text-left font-bold text-white">الصافي المستحق</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 text-slate-200 font-mono">
+                    {employees.map(emp => {
+                      const pieces = emp.completedPiecesThisMonth || 0;
+                      const pieceTotal = pieces * emp.pieceRatePerPiece;
+                      const total = emp.baseSalary + pieceTotal;
+                      return (
+                        <tr key={emp.id} className="hover:bg-[#182333]">
+                          <td className="py-2 px-3 font-sans">
+                            <span className="text-[#E2C785] font-mono mr-1">{emp.empCode}</span> {emp.fullName}
+                          </td>
+                          <td className="py-2 px-3 font-sans text-slate-400">{emp.role}</td>
+                          <td className="py-2 px-3 text-left rtl:text-left">{emp.baseSalary} AED</td>
+                          <td className="py-2 px-3 text-left rtl:text-left text-slate-400">{pieceTotal} AED</td>
+                          <td className="py-2 px-3 text-left rtl:text-left font-bold text-emerald-400">{total} AED</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot className="bg-[#0B0F17] border-t-2 border-[#C5A059]/40 text-xs font-bold text-white">
+                    <tr>
+                      <td colSpan={4} className="py-3 px-3 font-sans text-right">
+                        إجمالي مسير الرواتب المستحق الصرف:
+                      </td>
+                      <td className="py-3 px-3 text-left rtl:text-left font-mono text-[#E2C785] text-sm tabular-nums">
+                        {totalPayrollEst.toLocaleString()} {t.currency}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div className="p-3 bg-[#131B26] rounded-xl border border-slate-800 text-xs space-y-1">
+                <span className="text-[#E2C785] font-semibold block">الأثر المحاسبي في القيد المزدوج:</span>
+                <p className="text-slate-300">
+                  • مدين: حساب تكلفة عمالة الورشة (5020 - COGS Labor) بقيمة {totalPayrollEst.toLocaleString()} AED.
+                  <br />
+                  • دائن: حساب بنك الإمارات دبي الوطني (1020 - NBD Operating) بقيمة {totalPayrollEst.toLocaleString()} AED.
+                </p>
+              </div>
             </div>
 
-            <div className="p-3 bg-[#131B26] rounded-xl border border-slate-800 text-xs space-y-1">
-              <span className="text-[#E2C785] font-semibold block">الأثر المحاسبي في القيد المزدوج:</span>
-              <p className="text-slate-300">
-                • مدين: حساب تكلفة عمالة الورشة (5020 - COGS Labor) بقيمة {totalPayrollEst.toLocaleString()} AED.
-                <br />
-                • دائن: حساب بنك الإمارات دبي الوطني (1020 - NBD Operating) بقيمة {totalPayrollEst.toLocaleString()} AED.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-slate-800 shrink-0 bg-[#0B0F17]">
               <button
                 type="button"
                 onClick={() => setIsPayrollModalOpen(false)}
-                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl"
+                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl cursor-pointer"
               >
                 إلغاء
               </button>
               <button
                 type="button"
                 onClick={handlePostPayrollJournal}
-                className="flex items-center gap-2 px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl shadow-lg shadow-[#C5A059]/20"
+                className="flex items-center gap-2 px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl shadow-lg shadow-[#C5A059]/20 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>اعتماد وصرف المسير وترحيل القيد</span>
@@ -321,51 +336,54 @@ export const EmployeesView: React.FC = () => {
 
       {/* Add Employee Modal */}
       {isNewEmpModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-lg bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-lg max-h-[92vh] bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-100">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0 bg-[#0B0F17]">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                 <Users className="w-5 h-5 text-[#C5A059]" />
                 إضافة خياط أو فني جديد للورشة
               </h3>
               <button
+                type="button"
                 onClick={() => setIsNewEmpModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 text-lg font-bold"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-3 gap-3">
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-slate-400 mb-1">الرقم الوظيفي</label>
                   <input
                     type="text"
                     value={empCode}
                     onChange={e => setEmpCode(e.target.value)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white font-mono"
                   />
                 </div>
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                   <label className="block text-slate-400 mb-1">الاسم الكامل</label>
                   <input
                     type="text"
                     placeholder="مثال: محمد عبد الله (معلم خياطة)"
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-400 mb-1">المسمى الوظيفي / التخصص</label>
                   <select
                     value={role}
                     onChange={e => setRole(e.target.value as any)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-2.5 py-1.5 text-white"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-2.5 py-2 text-white"
                   >
                     <option value="MasterCutter">كبير الباترونيست والقصاصين</option>
                     <option value="Tailor">معلم خياطة وتجميع عبايات</option>
@@ -382,18 +400,18 @@ export const EmployeesView: React.FC = () => {
                     type="text"
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white font-mono"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-slate-400 mb-1">نظام الراتب</label>
                   <select
                     value={salaryType}
                     onChange={e => setSalaryType(e.target.value as any)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-2 py-1.5 text-white"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-2 py-2 text-white"
                   >
                     <option value="PieceRate">بالقطعة (Piece)</option>
                     <option value="Monthly">شهري ثابت (Monthly)</option>
@@ -406,7 +424,7 @@ export const EmployeesView: React.FC = () => {
                     type="number"
                     value={baseSalary}
                     onChange={e => setBaseSalary(Number(e.target.value) || 0)}
-                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono"
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white font-mono"
                   />
                 </div>
                 <div>
@@ -415,24 +433,25 @@ export const EmployeesView: React.FC = () => {
                     type="number"
                     value={pieceRate}
                     onChange={e => setPieceRate(Number(e.target.value) || 0)}
-                    className="w-full bg-[#1E293B] border border-[#C5A059] rounded-lg px-3 py-1.5 text-white font-mono font-bold"
+                    className="w-full bg-[#1E293B] border border-[#C5A059] rounded-lg px-3 py-2 text-white font-mono font-bold"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-slate-800 shrink-0 bg-[#0B0F17]">
               <button
                 type="button"
                 onClick={() => setIsNewEmpModalOpen(false)}
-                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl"
+                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl cursor-pointer"
               >
                 إلغاء
               </button>
               <button
                 type="button"
                 onClick={handleSaveEmployee}
-                className="px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl shadow-lg shadow-[#C5A059]/20"
+                className="px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl shadow-lg shadow-[#C5A059]/20 cursor-pointer"
               >
                 حفظ بيانات الخياط
               </button>

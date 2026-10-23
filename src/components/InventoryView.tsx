@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useErp } from '../context/ErpContext';
 import { getTranslation } from '../i18n/translations';
 import { InventoryCategory, InventoryItem } from '../types/erp';
@@ -14,6 +14,7 @@ import {
   FileSpreadsheet,
 } from 'lucide-react';
 import { exportToExcel } from '../utils/excelExport';
+import { registerGlobalModal } from '../hooks/useGlobalNavigation';
 
 export const InventoryView: React.FC = () => {
   const { lang, inventoryItems, stockMovements, createInventoryItem, adjustInventoryStock } = useErp();
@@ -24,6 +25,14 @@ export const InventoryView: React.FC = () => {
   const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [selectedItemForAdjust, setSelectedItemForAdjust] = useState<InventoryItem | null>(null);
+
+  useEffect(() => {
+    if (isNewItemModalOpen) return registerGlobalModal(() => setIsNewItemModalOpen(false));
+  }, [isNewItemModalOpen]);
+
+  useEffect(() => {
+    if (isAdjustModalOpen) return registerGlobalModal(() => setIsAdjustModalOpen(false));
+  }, [isAdjustModalOpen]);
 
   // New Item State
   const [sku, setSku] = useState(`FAB-KSH-${(inventoryItems.length + 1).toString().padStart(2, '0')}`);
@@ -277,30 +286,33 @@ export const InventoryView: React.FC = () => {
 
       {/* Stock Adjustment / Receipt Modal */}
       {isAdjustModalOpen && selectedItemForAdjust && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-md bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-md max-h-[92vh] bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-100">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0 bg-[#0B0F17]">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                 <Package className="w-5 h-5 text-[#C5A059]" />
                 تسوية وتوريد مخزون: {selectedItemForAdjust.sku}
               </h3>
               <button
+                type="button"
                 onClick={() => setIsAdjustModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 text-lg font-bold"
               >
                 ✕
               </button>
             </div>
 
-            <div className="p-3 bg-[#131B26] rounded-xl border border-slate-800 text-xs">
-              <span className="text-slate-400 block">{selectedItemForAdjust.nameAr}</span>
-              <div className="flex justify-between mt-1 font-mono">
-                <span>الرصيد الدفتري الحالي: <strong>{selectedItemForAdjust.currentStock} {selectedItemForAdjust.unit}</strong></span>
-                <span>تكلفة الوحدة: <strong>{selectedItemForAdjust.unitCost} AED</strong></span>
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 text-xs">
+              <div className="p-3 bg-[#131B26] rounded-xl border border-slate-800 text-xs">
+                <span className="text-slate-400 block">{selectedItemForAdjust.nameAr}</span>
+                <div className="flex justify-between mt-1 font-mono">
+                  <span>الرصيد الدفتري الحالي: <strong>{selectedItemForAdjust.currentStock} {selectedItemForAdjust.unit}</strong></span>
+                  <span>تكلفة الوحدة: <strong>{selectedItemForAdjust.unitCost} AED</strong></span>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-3 text-xs">
               <div>
                 <label className="block text-slate-400 mb-1">
                   الكمية (موجب للتوريد والشراء / سالب للصرف والتالف)
@@ -320,7 +332,7 @@ export const InventoryView: React.FC = () => {
                   placeholder="مثال: فاتورة شراء رقم PO-902..."
                   value={adjustReason}
                   onChange={e => setAdjustReason(e.target.value)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white"
+                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white"
                 />
               </div>
 
@@ -332,18 +344,19 @@ export const InventoryView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-slate-800 shrink-0 bg-[#0B0F17]">
               <button
                 type="button"
                 onClick={() => setIsAdjustModalOpen(false)}
-                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl"
+                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl cursor-pointer"
               >
                 إلغاء
               </button>
               <button
                 type="button"
                 onClick={handleSaveAdjust}
-                className="px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl shadow-lg shadow-[#C5A059]/20"
+                className="px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl shadow-lg shadow-[#C5A059]/20 cursor-pointer"
               >
                 تأكيد وقيد الحركة بالمستودع
               </button>
@@ -354,126 +367,132 @@ export const InventoryView: React.FC = () => {
 
       {/* Add New Item Modal */}
       {isNewItemModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-xl bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-xl max-h-[92vh] bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-100">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0 bg-[#0B0F17]">
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                 <Layers className="w-5 h-5 text-[#C5A059]" />
                 إضافة خامة / قماش جديد للمستودع
               </h3>
               <button
+                type="button"
                 onClick={() => setIsNewItemModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 text-lg font-bold"
               >
                 ✕
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div>
-                <label className="block text-slate-400 mb-1">رمز الصنف SKU</label>
-                <input
-                  type="text"
-                  value={sku}
-                  onChange={e => setSku(e.target.value)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono"
-                />
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-400 mb-1">رمز الصنف SKU</label>
+                  <input
+                    type="text"
+                    value={sku}
+                    onChange={e => setSku(e.target.value)}
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white font-mono"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-400 mb-1">اسم القماش / الخامة (بالعربية)</label>
+                  <input
+                    type="text"
+                    placeholder="مثال: قماش ندى ياباني أصلي..."
+                    value={nameAr}
+                    onChange={e => setNameAr(e.target.value)}
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
               </div>
-              <div className="sm:col-span-2">
-                <label className="block text-slate-400 mb-1">اسم القماش / الخامة (بالعربية)</label>
-                <input
-                  type="text"
-                  placeholder="مثال: قماش ندى ياباني أصلي..."
-                  value={nameAr}
-                  onChange={e => setNameAr(e.target.value)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white"
-                />
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-slate-400 mb-1">الفئة</label>
+                  <select
+                    value={category}
+                    onChange={e => setCategory(e.target.value as any)}
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-2.5 py-2 text-white"
+                  >
+                    <option value="Fabric">أقمشة (Fabric)</option>
+                    <option value="Lace_Trim">دانتيل وكلف (Lace)</option>
+                    <option value="Beads_Crystals">شك وكريستال</option>
+                    <option value="Packaging">تغليف وعلب</option>
+                    <option value="Finished_Product">عباية تامة الصنع</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">وحدة القياس</label>
+                  <select
+                    value={unit}
+                    onChange={e => setUnit(e.target.value)}
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-2.5 py-2 text-white"
+                  >
+                    <option value="Meter">متر (Meter)</option>
+                    <option value="Yard">يارده (Yard)</option>
+                    <option value="Roll">طاقة / لفة (Roll)</option>
+                    <option value="Pack">باكيت (Pack)</option>
+                    <option value="Piece">قطعة (Piece)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">الرصيد الافتتاحي</label>
+                  <input
+                    type="number"
+                    value={currentStock}
+                    onChange={e => setCurrentStock(Number(e.target.value) || 0)}
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#C5A059] mb-1 font-semibold">سعر التكلفة (AED)</label>
+                  <input
+                    type="number"
+                    value={unitCost}
+                    onChange={e => setUnitCost(Number(e.target.value) || 0)}
+                    className="w-full bg-[#1E293B] border border-[#C5A059] rounded-lg px-3 py-2 text-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 mb-1">حد تنبيه انخفاض المخزون</label>
+                  <input
+                    type="number"
+                    value={minStockAlert}
+                    onChange={e => setMinStockAlert(Number(e.target.value) || 0)}
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">موقع التخزين بالمستودع</label>
+                  <input
+                    type="text"
+                    placeholder="مثال: رف أ-1"
+                    value={warehouseLocation}
+                    onChange={e => setWarehouseLocation(e.target.value)}
+                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div>
-                <label className="block text-slate-400 mb-1">الفئة</label>
-                <select
-                  value={category}
-                  onChange={e => setCategory(e.target.value as any)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-2.5 py-1.5 text-white"
-                >
-                  <option value="Fabric">أقمشة (Fabric)</option>
-                  <option value="Lace_Trim">دانتيل وكلف (Lace)</option>
-                  <option value="Beads_Crystals">شك وكريستال</option>
-                  <option value="Packaging">تغليف وعلب</option>
-                  <option value="Finished_Product">عباية تامة الصنع</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-slate-400 mb-1">وحدة القياس</label>
-                <select
-                  value={unit}
-                  onChange={e => setUnit(e.target.value)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-2.5 py-1.5 text-white"
-                >
-                  <option value="Meter">متر (Meter)</option>
-                  <option value="Yard">يارده (Yard)</option>
-                  <option value="Roll">طاقة / لفة (Roll)</option>
-                  <option value="Pack">باكيت (Pack)</option>
-                  <option value="Piece">قطعة (Piece)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-slate-400 mb-1">الرصيد الافتتاحي</label>
-                <input
-                  type="number"
-                  value={currentStock}
-                  onChange={e => setCurrentStock(Number(e.target.value) || 0)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono"
-                />
-              </div>
-              <div>
-                <label className="block text-[#C5A059] mb-1 font-semibold">سعر التكلفة (AED)</label>
-                <input
-                  type="number"
-                  value={unitCost}
-                  onChange={e => setUnitCost(Number(e.target.value) || 0)}
-                  className="w-full bg-[#1E293B] border border-[#C5A059] rounded-lg px-3 py-1.5 text-white font-mono"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div>
-                <label className="block text-slate-400 mb-1">حد تنبيه انخفاض المخزون</label>
-                <input
-                  type="number"
-                  value={minStockAlert}
-                  onChange={e => setMinStockAlert(Number(e.target.value) || 0)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white font-mono"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-400 mb-1">موقع التخزين بالمستودع</label>
-                <input
-                  type="text"
-                  placeholder="مثال: رف أ-1"
-                  value={warehouseLocation}
-                  onChange={e => setWarehouseLocation(e.target.value)}
-                  className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-3 py-1.5 text-white"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-slate-800 shrink-0 bg-[#0B0F17]">
               <button
                 type="button"
                 onClick={() => setIsNewItemModalOpen(false)}
-                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl"
+                className="px-4 py-2 bg-[#1E293B] hover:bg-slate-700 text-slate-300 text-xs rounded-xl cursor-pointer"
               >
                 إلغاء
               </button>
               <button
                 type="button"
                 onClick={handleSaveItem}
-                className="px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl shadow-lg shadow-[#C5A059]/20"
+                className="px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl shadow-lg shadow-[#C5A059]/20 cursor-pointer"
               >
                 تسجيل الصنف بالمستودع
               </button>

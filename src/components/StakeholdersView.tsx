@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useErp } from '../context/ErpContext';
 import { getTranslation } from '../i18n/translations';
 import { Customer, Supplier } from '../types/erp';
@@ -11,7 +11,9 @@ import {
   FileText,
   Search,
   DollarSign,
+  X,
 } from 'lucide-react';
+import { registerGlobalModal } from '../hooks/useGlobalNavigation';
 
 export const StakeholdersView: React.FC = () => {
   const { lang, customers, suppliers, createCustomer, createSupplier } = useErp();
@@ -21,6 +23,14 @@ export const StakeholdersView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isCustomerModalOpen) return registerGlobalModal(() => setIsCustomerModalOpen(false));
+  }, [isCustomerModalOpen]);
+
+  useEffect(() => {
+    if (isSupplierModalOpen) return registerGlobalModal(() => setIsSupplierModalOpen(false));
+  }, [isSupplierModalOpen]);
 
   // New Customer State
   const [cCode, setCCode] = useState(`CUST-${(customers.length + 1).toString().padStart(3, '0')}`);
@@ -234,12 +244,23 @@ export const StakeholdersView: React.FC = () => {
 
       {/* Customer Modal */}
       {isCustomerModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-md bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
-            <h3 className="text-base font-bold text-white border-b border-slate-800 pb-2">
-              إضافة عميل أو متجر جديد
-            </h3>
-            <div className="space-y-3 text-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 overflow-y-auto">
+          <div className="relative w-full max-w-md max-h-[92vh] flex flex-col bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl overflow-hidden my-auto">
+            <div className="flex items-center justify-between border-b border-slate-800 p-4 shrink-0 bg-[#0F172A]">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#C5A059]" />
+                إضافة عميل أو متجر جديد
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsCustomerModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 text-xs">
               <div>
                 <label className="block text-slate-400 mb-1">اسم العميل / المتجر *</label>
                 <input
@@ -281,7 +302,8 @@ export const StakeholdersView: React.FC = () => {
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+
+            <div className="flex justify-end gap-3 p-3 sm:p-4 border-t border-slate-800 shrink-0 bg-[#0A0E17]">
               <button
                 type="button"
                 onClick={() => setIsCustomerModalOpen(false)}
@@ -303,12 +325,23 @@ export const StakeholdersView: React.FC = () => {
 
       {/* Supplier Modal */}
       {isSupplierModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-md bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
-            <h3 className="text-base font-bold text-white border-b border-slate-800 pb-2">
-              إضافة مورد أقمشة ومستلزمات
-            </h3>
-            <div className="space-y-3 text-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 overflow-y-auto">
+          <div className="relative w-full max-w-md max-h-[92vh] flex flex-col bg-[#0F172A] border border-[#C5A059]/40 rounded-2xl shadow-2xl overflow-hidden my-auto">
+            <div className="flex items-center justify-between border-b border-slate-800 p-4 shrink-0 bg-[#0F172A]">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-[#C5A059]" />
+                إضافة مورد أقمشة ومستلزمات
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsSupplierModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 text-xs">
               <div>
                 <label className="block text-slate-400 mb-1">اسم شركة المورد / المعمل *</label>
                 <input
@@ -340,7 +373,8 @@ export const StakeholdersView: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+
+            <div className="flex justify-end gap-3 p-3 sm:p-4 border-t border-slate-800 shrink-0 bg-[#0A0E17]">
               <button
                 type="button"
                 onClick={() => setIsSupplierModalOpen(false)}

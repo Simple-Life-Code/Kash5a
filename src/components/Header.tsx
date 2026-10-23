@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useErp, ActiveTab } from '../context/ErpContext';
 import { getTranslation } from '../i18n/translations';
@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
+import { registerGlobalModal } from '../hooks/useGlobalNavigation';
 
 export const Header: React.FC = () => {
   const {
@@ -52,6 +53,19 @@ export const Header: React.FC = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+
+  useEffect(() => {
+    if (isSettingsModalOpen) return registerGlobalModal(() => setIsSettingsModalOpen(false));
+  }, [isSettingsModalOpen]);
+
+  useEffect(() => {
+    if (isLogoutModalOpen) return registerGlobalModal(() => setIsLogoutModalOpen(false));
+  }, [isLogoutModalOpen]);
+
+  useEffect(() => {
+    if (isResetModalOpen) return registerGlobalModal(() => setIsResetModalOpen(false));
+  }, [isResetModalOpen]);
+
   const [formData, setFormData] = useState({
     companyName: getCleanCompanyName(settings.companyName),
     tradeLicenseNumber: settings.tradeLicenseNumber || '',
@@ -284,28 +298,30 @@ export const Header: React.FC = () => {
             aria-hidden="true"
           />
 
-          <div className="relative z-10 w-full max-w-lg bg-[#0E1523] border-2 border-[#C5A059] rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] p-5 sm:p-6 my-auto text-slate-100 space-y-4 max-h-[90vh] overflow-y-auto ring-1 ring-[#C5A059]/30">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="relative z-10 w-full max-w-lg max-h-[92vh] bg-[#0E1523] border-2 border-[#C5A059] rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] flex flex-col overflow-hidden my-auto text-slate-100 ring-1 ring-[#C5A059]/30">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0 bg-[#0B0F17]">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2 font-serif">
+                <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 font-serif">
                   <Building2 className="w-5 h-5 text-[#C5A059]" />
                   بيانات منشأة Kashkha Fashions
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-[11px] text-slate-400 mt-0.5">
                   إدارة بيانات المقر، الهاتف، ورابط خرائط Google المعتمد
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsSettingsModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold p-1 rounded-lg hover:bg-slate-800 transition-colors"
+                className="text-slate-400 hover:text-white text-lg font-bold p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
                 title="إغلاق النافذة"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3.5 text-xs">
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 text-xs">
               <div>
                 <label className="block text-slate-300 mb-1 font-medium">اسم المنشأة والتطبيق *</label>
                 <input
@@ -313,7 +329,7 @@ export const Header: React.FC = () => {
                   value={formData.companyName}
                   onChange={e => setFormData({ ...formData, companyName: e.target.value })}
                   placeholder="Kashkha Fashions"
-                  className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl px-3.5 py-2.5 text-white font-serif shadow-inner"
+                  className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl px-3.5 py-2 text-white font-serif shadow-inner"
                 />
               </div>
 
@@ -327,7 +343,7 @@ export const Header: React.FC = () => {
                       value={formData.phone}
                       onChange={e => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="+971589366255"
-                      className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl pl-9 pr-3 py-2.5 text-white font-mono text-left shadow-inner"
+                      className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl pl-9 pr-3 py-2 text-white font-mono text-left shadow-inner"
                       dir="ltr"
                     />
                   </div>
@@ -342,7 +358,7 @@ export const Header: React.FC = () => {
                       value={formData.email}
                       onChange={e => setFormData({ ...formData, email: e.target.value })}
                       placeholder="fatimazohramaryam88@gmail.com"
-                      className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl pl-9 pr-3 py-2.5 text-white text-left font-mono shadow-inner"
+                      className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl pl-9 pr-3 py-2 text-white text-left font-mono shadow-inner"
                       dir="ltr"
                     />
                   </div>
@@ -358,7 +374,7 @@ export const Header: React.FC = () => {
                     value={formData.locationUrl}
                     onChange={e => setFormData({ ...formData, locationUrl: e.target.value })}
                     placeholder="https://share.google/kytFkIoB2HiU4Cryn"
-                    className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl pl-9 pr-3 py-2.5 text-white text-left font-mono text-[11px] shadow-inner"
+                    className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl pl-9 pr-3 py-2 text-white text-left font-mono text-[11px] shadow-inner"
                     dir="ltr"
                   />
                 </div>
@@ -372,7 +388,7 @@ export const Header: React.FC = () => {
                     value={formData.tradeLicenseNumber}
                     onChange={e => setFormData({ ...formData, tradeLicenseNumber: e.target.value })}
                     placeholder="رقم الرخصة التجارية (اختياري)"
-                    className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl px-3.5 py-2.5 text-white font-mono shadow-inner"
+                    className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl px-3.5 py-2 text-white font-mono shadow-inner"
                   />
                 </div>
 
@@ -383,7 +399,7 @@ export const Header: React.FC = () => {
                     value={formData.trn}
                     onChange={e => setFormData({ ...formData, trn: e.target.value })}
                     placeholder="رقم التسجيل الضريبي (اختياري)"
-                    className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl px-3.5 py-2.5 text-white font-mono shadow-inner"
+                    className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl px-3.5 py-2 text-white font-mono shadow-inner"
                   />
                 </div>
               </div>
@@ -395,23 +411,24 @@ export const Header: React.FC = () => {
                   value={formData.address}
                   onChange={e => setFormData({ ...formData, address: e.target.value })}
                   placeholder="مثال: دبي / الشارقة - دولة الإمارات العربية المتحدة"
-                  className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl px-3.5 py-2.5 text-white shadow-inner"
+                  className="w-full bg-[#182334] border border-[#2A3B53] focus:border-[#C5A059] focus:outline-none rounded-xl px-3.5 py-2 text-white shadow-inner"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-slate-800 shrink-0 bg-[#0B0F17]">
               <button
                 type="button"
                 onClick={() => setIsSettingsModalOpen(false)}
-                className="px-4 py-2 bg-[#182334] hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl transition-colors"
+                className="px-4 py-2 bg-[#182334] hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl transition-colors cursor-pointer"
               >
                 إلغاء
               </button>
               <button
                 type="button"
                 onClick={handleSaveSettings}
-                className="flex items-center gap-1.5 px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl transition-all shadow-md shadow-[#C5A059]/20"
+                className="flex items-center gap-1.5 px-5 py-2 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl transition-all shadow-md shadow-[#C5A059]/20 cursor-pointer"
               >
                 <Check className="w-4 h-4" />
                 <span>حفظ البيانات</span>

@@ -15,10 +15,21 @@ import { SalesInvoice } from './types/erp';
 import { Phone, MapPin, Mail, ExternalLink, ShieldCheck, Sparkles } from 'lucide-react';
 import { LoginPage } from './components/LoginPage';
 import { LogoLoader } from './components/LogoLoader';
+import { useGlobalNavigation, registerGlobalModal } from './hooks/useGlobalNavigation';
 
 const MainLayout: React.FC = () => {
-  const { settings, activeTab, isLoading, authLoading, isAuthorized } = useErp();
+  const { settings, activeTab, setActiveTab, isLoading, authLoading, isAuthorized } = useErp();
   const [selectedInvoiceForPrint, setSelectedInvoiceForPrint] = useState<SalesInvoice | null>(null);
+
+  // Global navigation handler for phone back button, Esc key step back, and exit warning
+  useGlobalNavigation(activeTab, setActiveTab);
+
+  // Register invoice print modal if open
+  React.useEffect(() => {
+    if (selectedInvoiceForPrint) {
+      return registerGlobalModal(() => setSelectedInvoiceForPrint(null));
+    }
+  }, [selectedInvoiceForPrint]);
 
   const cleanCompanyName = !settings.companyName || settings.companyName.includes('ksh5a') || settings.companyName.includes('كشخة للأزياء')
     ? 'Kashkha Fashions'

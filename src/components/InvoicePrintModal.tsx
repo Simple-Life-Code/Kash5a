@@ -11,11 +11,11 @@ export const InvoicePrintModal: React.FC<{
   if (!invoice) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white text-slate-900 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-6 my-8 print:p-0 print:m-0 print:shadow-none print:rounded-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4 overflow-y-auto">
+      <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col bg-white text-slate-900 rounded-2xl shadow-2xl overflow-hidden my-auto print:max-h-none print:p-0 print:m-0 print:shadow-none print:rounded-none">
         
         {/* Actions bar (hidden on print) */}
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4 print:hidden">
+        <div className="flex items-center justify-between border-b border-slate-200 p-4 shrink-0 bg-slate-50 print:hidden">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-[#C5A059]/20 text-[#8E7033] font-bold text-xs">
               معاينة الفاتورة الضريبية الرسمية
@@ -39,7 +39,7 @@ export const InvoicePrintModal: React.FC<{
         </div>
 
         {/* Printable Invoice Container */}
-        <div className="space-y-6 text-xs text-slate-800">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-xs text-slate-800 print:overflow-visible print:p-0">
           
           {/* Header Lockup */}
           <div className="flex items-start justify-between border-b-2 border-[#C5A059] pb-6">
