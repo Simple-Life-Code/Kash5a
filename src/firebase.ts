@@ -1,6 +1,13 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  getFirestore,
+  doc,
+  getDocFromServer
+} from 'firebase/firestore';
 import firebaseLocalConfig from '../firebase-applet-config.json';
 
 const firebaseConfig = {
@@ -15,10 +22,19 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db =
-  !firebaseConfig.firestoreDatabaseId || firebaseConfig.firestoreDatabaseId === '(default)'
-    ? getFirestore(app)
-    : getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+let firestoreInstance;
+try {
+  firestoreInstance = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager(),
+    }),
+  });
+} catch {
+  firestoreInstance = getFirestore(app);
+}
+
+export const db = firestoreInstance;
 
 export enum OperationType {
   CREATE = 'create',

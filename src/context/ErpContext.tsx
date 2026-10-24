@@ -84,17 +84,42 @@ interface ErpContextType {
   updateModel: (modelId: string, modelData: Partial<Model>) => Promise<void>;
   deleteModel: (modelId: string) => Promise<void>;
   createProductionOrder: (order: Omit<ProductionOrder, 'id'>) => Promise<void>;
+  updateProductionOrder: (orderId: string, orderData: Partial<ProductionOrder>) => Promise<void>;
+  deleteProductionOrder: (orderId: string) => Promise<void>;
   advanceProductionStage: (orderId: string, nextStage: ProductionStage, notes?: string) => Promise<void>;
   createInventoryItem: (item: Omit<InventoryItem, 'id'>) => Promise<void>;
+  updateInventoryItem: (itemId: string, itemData: Partial<InventoryItem>) => Promise<void>;
+  deleteInventoryItem: (itemId: string) => Promise<void>;
   adjustInventoryStock: (itemId: string, qtyDelta: number, reason: string) => Promise<void>;
   createSalesInvoice: (invoice: Omit<SalesInvoice, 'id'>) => Promise<{ invoiceId: string }>;
   createCustomer: (customer: Omit<Customer, 'id'>) => Promise<void>;
+  updateCustomer: (customerId: string, customerData: Partial<Customer>) => Promise<void>;
+  deleteCustomer: (customerId: string) => Promise<void>;
   createSupplier: (supplier: Omit<Supplier, 'id'>) => Promise<void>;
+  updateSupplier: (supplierId: string, supplierData: Partial<Supplier>) => Promise<void>;
+  deleteSupplier: (supplierId: string) => Promise<void>;
   createEmployee: (employee: Omit<Employee, 'id'>) => Promise<void>;
+  updateEmployee: (employeeId: string, employeeData: Partial<Employee>) => Promise<void>;
+  deleteEmployee: (employeeId: string) => Promise<void>;
   resetToZeroState: () => Promise<void>;
 }
 
 const ErpContext = createContext<ErpContextType | undefined>(undefined);
+
+const getStoredCache = <T,>(key: string, fallback: T): T => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const setStoredCache = <T,>(key: string, data: T) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {}
+};
 
 export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [lang, setLangState] = useState<Language>('ar');
@@ -111,18 +136,18 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const clearAuthError = () => setAuthError(null);
 
-  // Core State (Clean initial state without mock data)
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
-  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>([]);
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
-  const [salesInvoices, setSalesInvoices] = useState<SalesInvoice[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  // Multi-tier State with immediate LocalStorage fallback for zero-loss & instant render
+  const [settings, setSettings] = useState<Settings>(() => getStoredCache('kashkha_settings_cache', defaultSettings));
+  const [accounts, setAccounts] = useState<Account[]>(() => getStoredCache('kashkha_accounts_cache', []));
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => getStoredCache('kashkha_journals_cache', []));
+  const [models, setModels] = useState<Model[]>(() => getStoredCache('kashkha_models_cache', []));
+  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(() => getStoredCache('kashkha_orders_cache', []));
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() => getStoredCache('kashkha_inventory_cache', []));
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => getStoredCache('kashkha_movements_cache', []));
+  const [salesInvoices, setSalesInvoices] = useState<SalesInvoice[]>(() => getStoredCache('kashkha_invoices_cache', []));
+  const [customers, setCustomers] = useState<Customer[]>(() => getStoredCache('kashkha_customers_cache', []));
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => getStoredCache('kashkha_suppliers_cache', []));
+  const [employees, setEmployees] = useState<Employee[]>(() => getStoredCache('kashkha_employees_cache', []));
 
   // Language & Bidi Handling
   const setLang = (newLang: Language) => {
@@ -246,12 +271,15 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const migrated = { ...loaded, companyName: 'Kashkha Fashions' };
                 setDoc(doc(db, 'settings', 'general'), { companyName: 'Kashkha Fashions' }, { merge: true }).catch(() => {});
                 setSettings(migrated);
+                setStoredCache('kashkha_settings_cache', migrated);
               } else {
                 setSettings(loaded);
+                setStoredCache('kashkha_settings_cache', loaded);
               }
             } else {
               setDoc(doc(db, 'settings', 'general'), defaultSettings, { merge: true }).catch(() => {});
               setSettings(defaultSettings);
+              setStoredCache('kashkha_settings_cache', defaultSettings);
             }
             setIsLoading(false);
           },
@@ -269,21 +297,30 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Account));
               list.sort((a, b) => a.code.localeCompare(b.code));
               setAccounts(list);
+              setStoredCache('kashkha_accounts_cache', list);
             } else {
-              // Seed clean 0.00 balance standard chart of accounts
-              const batch = writeBatch(db);
-              const initialAccounts = standardChartOfAccounts.map((acc, index) => {
-                const id = `acc_${acc.code}_${index}`;
-                const item: Account = { id, ...acc, balance: 0 };
-                batch.set(doc(db, 'accounts', id), item);
-                return item;
-              });
-              batch.commit().catch(() => {});
-              setAccounts(initialAccounts);
+              const cached = getStoredCache<Account[]>('kashkha_accounts_cache', []);
+              if (cached.length > 0) {
+                setAccounts(cached);
+              } else {
+                // Seed clean 0.00 balance standard chart of accounts
+                const batch = writeBatch(db);
+                const initialAccounts = standardChartOfAccounts.map((acc, index) => {
+                  const id = `acc_${acc.code}_${index}`;
+                  const item: Account = { id, ...acc, balance: 0 };
+                  batch.set(doc(db, 'accounts', id), item);
+                  return item;
+                });
+                batch.commit().catch(() => {});
+                setAccounts(initialAccounts);
+                setStoredCache('kashkha_accounts_cache', initialAccounts);
+              }
             }
           },
           (error) => {
             console.warn('Accounts listener info:', error.message);
+            const cached = getStoredCache<Account[]>('kashkha_accounts_cache', []);
+            if (cached.length > 0) setAccounts(cached);
           }
         );
 
@@ -291,12 +328,20 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         unsubscribeJournals = onSnapshot(
           collection(db, 'journalEntries'),
           (snap) => {
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as JournalEntry));
-            list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-            setJournalEntries(list);
+            if (!snap.empty) {
+              const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as JournalEntry));
+              list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+              setJournalEntries(list);
+              setStoredCache('kashkha_journals_cache', list);
+            } else {
+              const cached = getStoredCache<JournalEntry[]>('kashkha_journals_cache', []);
+              if (cached.length > 0) setJournalEntries(cached);
+            }
           },
           (error) => {
             console.warn('JournalEntries listener info:', error.message);
+            const cached = getStoredCache<JournalEntry[]>('kashkha_journals_cache', []);
+            if (cached.length > 0) setJournalEntries(cached);
           }
         );
 
@@ -307,20 +352,16 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (!snap.empty) {
               const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Model));
               setModels(list);
-              try { localStorage.setItem('kashkha_models_cache', JSON.stringify(list)); } catch {}
+              setStoredCache('kashkha_models_cache', list);
             } else {
-              try {
-                const cached = JSON.parse(localStorage.getItem('kashkha_models_cache') || '[]');
-                if (cached.length > 0) setModels(cached);
-              } catch {}
+              const cached = getStoredCache<Model[]>('kashkha_models_cache', []);
+              if (cached.length > 0) setModels(cached);
             }
           },
           (error) => {
             console.warn('Models listener info:', error.message);
-            try {
-              const cached = JSON.parse(localStorage.getItem('kashkha_models_cache') || '[]');
-              if (cached.length > 0) setModels(cached);
-            } catch {}
+            const cached = getStoredCache<Model[]>('kashkha_models_cache', []);
+            if (cached.length > 0) setModels(cached);
           }
         );
 
@@ -328,12 +369,20 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         unsubscribeProduction = onSnapshot(
           collection(db, 'productionOrders'),
           (snap) => {
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as ProductionOrder));
-            list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-            setProductionOrders(list);
+            if (!snap.empty) {
+              const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as ProductionOrder));
+              list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+              setProductionOrders(list);
+              setStoredCache('kashkha_orders_cache', list);
+            } else {
+              const cached = getStoredCache<ProductionOrder[]>('kashkha_orders_cache', []);
+              if (cached.length > 0) setProductionOrders(cached);
+            }
           },
           (error) => {
             console.warn('ProductionOrders listener info:', error.message);
+            const cached = getStoredCache<ProductionOrder[]>('kashkha_orders_cache', []);
+            if (cached.length > 0) setProductionOrders(cached);
           }
         );
 
@@ -341,11 +390,19 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         unsubscribeInventory = onSnapshot(
           collection(db, 'inventoryItems'),
           (snap) => {
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as InventoryItem));
-            setInventoryItems(list);
+            if (!snap.empty) {
+              const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as InventoryItem));
+              setInventoryItems(list);
+              setStoredCache('kashkha_inventory_cache', list);
+            } else {
+              const cached = getStoredCache<InventoryItem[]>('kashkha_inventory_cache', []);
+              if (cached.length > 0) setInventoryItems(cached);
+            }
           },
           (error) => {
             console.warn('InventoryItems listener info:', error.message);
+            const cached = getStoredCache<InventoryItem[]>('kashkha_inventory_cache', []);
+            if (cached.length > 0) setInventoryItems(cached);
           }
         );
 
@@ -353,12 +410,20 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         unsubscribeSales = onSnapshot(
           collection(db, 'salesInvoices'),
           (snap) => {
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as SalesInvoice));
-            list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-            setSalesInvoices(list);
+            if (!snap.empty) {
+              const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as SalesInvoice));
+              list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+              setSalesInvoices(list);
+              setStoredCache('kashkha_invoices_cache', list);
+            } else {
+              const cached = getStoredCache<SalesInvoice[]>('kashkha_invoices_cache', []);
+              if (cached.length > 0) setSalesInvoices(cached);
+            }
           },
           (error) => {
             console.warn('SalesInvoices listener info:', error.message);
+            const cached = getStoredCache<SalesInvoice[]>('kashkha_invoices_cache', []);
+            if (cached.length > 0) setSalesInvoices(cached);
           }
         );
 
@@ -366,11 +431,19 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         unsubscribeEmployees = onSnapshot(
           collection(db, 'employees'),
           (snap) => {
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
-            setEmployees(list);
+            if (!snap.empty) {
+              const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Employee));
+              setEmployees(list);
+              setStoredCache('kashkha_employees_cache', list);
+            } else {
+              const cached = getStoredCache<Employee[]>('kashkha_employees_cache', []);
+              if (cached.length > 0) setEmployees(cached);
+            }
           },
           (error) => {
             console.warn('Employees listener info:', error.message);
+            const cached = getStoredCache<Employee[]>('kashkha_employees_cache', []);
+            if (cached.length > 0) setEmployees(cached);
           }
         );
 
@@ -378,11 +451,19 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         unsubscribeCustomers = onSnapshot(
           collection(db, 'customers'),
           (snap) => {
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Customer));
-            setCustomers(list);
+            if (!snap.empty) {
+              const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Customer));
+              setCustomers(list);
+              setStoredCache('kashkha_customers_cache', list);
+            } else {
+              const cached = getStoredCache<Customer[]>('kashkha_customers_cache', []);
+              if (cached.length > 0) setCustomers(cached);
+            }
           },
           (error) => {
             console.warn('Customers listener info:', error.message);
+            const cached = getStoredCache<Customer[]>('kashkha_customers_cache', []);
+            if (cached.length > 0) setCustomers(cached);
           }
         );
 
@@ -390,11 +471,19 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         unsubscribeSuppliers = onSnapshot(
           collection(db, 'suppliers'),
           (snap) => {
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Supplier));
-            setSuppliers(list);
+            if (!snap.empty) {
+              const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Supplier));
+              setSuppliers(list);
+              setStoredCache('kashkha_suppliers_cache', list);
+            } else {
+              const cached = getStoredCache<Supplier[]>('kashkha_suppliers_cache', []);
+              if (cached.length > 0) setSuppliers(cached);
+            }
           },
           (error) => {
             console.warn('Suppliers listener info:', error.message);
+            const cached = getStoredCache<Supplier[]>('kashkha_suppliers_cache', []);
+            if (cached.length > 0) setSuppliers(cached);
           }
         );
 
@@ -556,14 +645,42 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setModels(prev => prev.filter(m => m.id !== modelId));
   };
 
-  // Production: Create order
+  // Production: Create order with dual persistence
   const createProductionOrder = async (order: Omit<ProductionOrder, 'id'>) => {
     const id = `prod_${Date.now()}`;
     const newOrder: ProductionOrder = { id, ...order };
+    const updated = [newOrder, ...productionOrders];
+    setProductionOrders(updated);
+    setStoredCache('kashkha_orders_cache', updated);
     try {
       await setDoc(doc(db, 'productionOrders', id), newOrder);
-    } catch {}
-    setProductionOrders(prev => [newOrder, ...prev]);
+    } catch (err) {
+      console.warn('Firestore createProductionOrder warning:', err);
+    }
+  };
+
+  // Production: Update order
+  const updateProductionOrder = async (orderId: string, orderData: Partial<ProductionOrder>) => {
+    const updated = productionOrders.map(o => (o.id === orderId ? { ...o, ...orderData } : o));
+    setProductionOrders(updated);
+    setStoredCache('kashkha_orders_cache', updated);
+    try {
+      await setDoc(doc(db, 'productionOrders', orderId), orderData, { merge: true });
+    } catch (err) {
+      console.warn('Firestore updateProductionOrder warning:', err);
+    }
+  };
+
+  // Production: Delete order
+  const deleteProductionOrder = async (orderId: string) => {
+    const updated = productionOrders.filter(o => o.id !== orderId);
+    setProductionOrders(updated);
+    setStoredCache('kashkha_orders_cache', updated);
+    try {
+      await deleteDoc(doc(db, 'productionOrders', orderId));
+    } catch (err) {
+      console.warn('Firestore deleteProductionOrder warning:', err);
+    }
   };
 
   // Production: Advance 7 Stages
@@ -581,31 +698,63 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       },
     ];
 
-    const updated: ProductionOrder = {
+    const updatedOrder: ProductionOrder = {
       ...order,
       currentStage: nextStage,
       stageHistory: newHistory,
     };
 
     if (nextStage === 'Cutting' && !order.materialsIssued) {
-      updated.materialsIssued = true;
+      updatedOrder.materialsIssued = true;
     }
 
-    try {
-      await setDoc(doc(db, 'productionOrders', orderId), updated, { merge: true });
-    } catch {}
+    const updated = productionOrders.map(o => (o.id === orderId ? updatedOrder : o));
+    setProductionOrders(updated);
+    setStoredCache('kashkha_orders_cache', updated);
 
-    setProductionOrders(prev => prev.map(o => o.id === orderId ? updated : o));
+    try {
+      await setDoc(doc(db, 'productionOrders', orderId), updatedOrder, { merge: true });
+    } catch (err) {
+      console.warn('Firestore advanceProductionStage warning:', err);
+    }
   };
 
-  // Inventory: Create item
+  // Inventory: Create item with dual persistence
   const createInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
     const id = `inv_${Date.now()}`;
     const newItem: InventoryItem = { id, ...item };
+    const updated = [...inventoryItems, newItem];
+    setInventoryItems(updated);
+    setStoredCache('kashkha_inventory_cache', updated);
     try {
       await setDoc(doc(db, 'inventoryItems', id), newItem);
-    } catch {}
-    setInventoryItems(prev => [...prev, newItem]);
+    } catch (err) {
+      console.warn('Firestore createInventoryItem warning:', err);
+    }
+  };
+
+  // Inventory: Update item
+  const updateInventoryItem = async (itemId: string, itemData: Partial<InventoryItem>) => {
+    const updated = inventoryItems.map(i => (i.id === itemId ? { ...i, ...itemData } : i));
+    setInventoryItems(updated);
+    setStoredCache('kashkha_inventory_cache', updated);
+    try {
+      await setDoc(doc(db, 'inventoryItems', itemId), itemData, { merge: true });
+    } catch (err) {
+      console.warn('Firestore updateInventoryItem warning:', err);
+    }
+  };
+
+  // Inventory: Delete item
+  const deleteInventoryItem = async (itemId: string) => {
+    const updated = inventoryItems.filter(i => i.id !== itemId);
+    setInventoryItems(updated);
+    setStoredCache('kashkha_inventory_cache', updated);
+    try {
+      await deleteDoc(doc(db, 'inventoryItems', itemId));
+    } catch (err) {
+      console.warn('Firestore deleteInventoryItem warning:', err);
+    }
   };
 
   // Inventory: Adjust stock
@@ -627,6 +776,13 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: new Date().toISOString(),
     };
 
+    const updatedItems = inventoryItems.map(i => (i.id === itemId ? { ...i, currentStock: newStock } : i));
+    const updatedMovements = [movement, ...stockMovements];
+    setInventoryItems(updatedItems);
+    setStockMovements(updatedMovements);
+    setStoredCache('kashkha_inventory_cache', updatedItems);
+    setStoredCache('kashkha_movements_cache', updatedMovements);
+
     try {
       const batch = writeBatch(db);
       batch.update(doc(db, 'inventoryItems', itemId), {
@@ -635,10 +791,9 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       batch.set(doc(db, 'stockMovements', movement.id), movement);
       await batch.commit();
-    } catch {}
-
-    setInventoryItems(prev => prev.map(i => i.id === itemId ? { ...i, currentStock: newStock } : i));
-    setStockMovements(prev => [movement, ...prev]);
+    } catch (err) {
+      console.warn('Firestore adjustInventoryStock warning:', err);
+    }
   };
 
   // Sales: Invoicing with Double-Entry Journal Posting
@@ -646,104 +801,191 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const id = `inv_tax_${Date.now()}`;
     const newInvoice: SalesInvoice = { id, ...invoiceData };
 
+    const debitAccountCode = invoiceData.paymentMethod === 'Cash'
+      ? '1010'
+      : invoiceData.paymentMethod === 'BankTransfer' || invoiceData.paymentMethod === 'Card'
+      ? '1020'
+      : '1300';
+
+    const revenueAccountCode = invoiceData.saleType === 'Retail' ? '4010' : '4020';
+
+    const journalId = `jv_auto_${Date.now()}`;
+    const autoJournal: JournalEntry = {
+      id: journalId,
+      entryNumber: `JV-${invoiceData.invoiceNumber}`,
+      date: invoiceData.date,
+      description: `فاتورة مبيعات ${invoiceData.saleType === 'Retail' ? 'تجزئة' : 'جملة'} رقم ${invoiceData.invoiceNumber} - ${invoiceData.customerName}`,
+      referenceType: 'Invoice',
+      referenceId: id,
+      totalAmount: invoiceData.grandTotal,
+      postedBy: 'نقطة البيع (POS)',
+      createdAt: new Date().toISOString(),
+      lines: [
+        {
+          accountId: debitAccountCode,
+          accountCode: debitAccountCode,
+          accountName: debitAccountCode === '1010' ? 'النقدية بالصندوق (الخزينة)' : debitAccountCode === '1020' ? 'بنك الإمارات دبي الوطني' : 'الذمم المدينة (العملاء)',
+          debit: invoiceData.grandTotal,
+          credit: 0,
+          memo: `تحصيل فاتورة ${invoiceData.invoiceNumber}`,
+        },
+        {
+          accountId: revenueAccountCode,
+          accountCode: revenueAccountCode,
+          accountName: revenueAccountCode === '4010' ? 'إيرادات مبيعات العبايات (تجزئة)' : 'إيرادات مبيعات الجملة',
+          debit: 0,
+          credit: invoiceData.subtotal,
+          memo: 'صافي إيراد بيع العبايات',
+        },
+        {
+          accountId: '2050',
+          accountCode: '2050',
+          accountName: 'ضريبة القيمة المضافة المستحقة (FTA 5%)',
+          debit: 0,
+          credit: invoiceData.vatAmount,
+          memo: 'ضريبة مخرجات 5%',
+        },
+      ],
+    };
+
+    const updatedInvoices = [newInvoice, ...salesInvoices];
+    const updatedJournals = [autoJournal, ...journalEntries];
+    const updatedAccounts = [...accounts];
+    const debitAcc = updatedAccounts.find(a => a.code === debitAccountCode);
+    if (debitAcc) debitAcc.balance += invoiceData.grandTotal;
+    const revAcc = updatedAccounts.find(a => a.code === revenueAccountCode);
+    if (revAcc) revAcc.balance += invoiceData.subtotal;
+    const vatAcc = updatedAccounts.find(a => a.code === '2050');
+    if (vatAcc) vatAcc.balance += invoiceData.vatAmount;
+
+    setSalesInvoices(updatedInvoices);
+    setJournalEntries(updatedJournals);
+    setAccounts(updatedAccounts);
+    setStoredCache('kashkha_invoices_cache', updatedInvoices);
+    setStoredCache('kashkha_journals_cache', updatedJournals);
+    setStoredCache('kashkha_accounts_cache', updatedAccounts);
+
     try {
       const batch = writeBatch(db);
       batch.set(doc(db, 'salesInvoices', id), newInvoice);
-
-      const debitAccountCode = invoiceData.paymentMethod === 'Cash'
-        ? '1010'
-        : invoiceData.paymentMethod === 'BankTransfer' || invoiceData.paymentMethod === 'Card'
-        ? '1020'
-        : '1300';
-
-      const revenueAccountCode = invoiceData.saleType === 'Retail' ? '4010' : '4020';
-
-      const journalId = `jv_auto_${Date.now()}`;
-      const autoJournal: JournalEntry = {
-        id: journalId,
-        entryNumber: `JV-${invoiceData.invoiceNumber}`,
-        date: invoiceData.date,
-        description: `فاتورة مبيعات ${invoiceData.saleType === 'Retail' ? 'تجزئة' : 'جملة'} رقم ${invoiceData.invoiceNumber} - ${invoiceData.customerName}`,
-        referenceType: 'Invoice',
-        referenceId: id,
-        totalAmount: invoiceData.grandTotal,
-        postedBy: 'نقطة البيع (POS)',
-        createdAt: new Date().toISOString(),
-        lines: [
-          {
-            accountId: debitAccountCode,
-            accountCode: debitAccountCode,
-            accountName: debitAccountCode === '1010' ? 'النقدية بالصندوق (الخزينة)' : debitAccountCode === '1020' ? 'بنك الإمارات دبي الوطني' : 'الذمم المدينة (العملاء)',
-            debit: invoiceData.grandTotal,
-            credit: 0,
-            memo: `تحصيل فاتورة ${invoiceData.invoiceNumber}`,
-          },
-          {
-            accountId: revenueAccountCode,
-            accountCode: revenueAccountCode,
-            accountName: revenueAccountCode === '4010' ? 'إيرادات مبيعات العبايات (تجزئة)' : 'إيرادات مبيعات الجملة',
-            debit: 0,
-            credit: invoiceData.subtotal,
-            memo: 'صافي إيراد بيع العبايات',
-          },
-          {
-            accountId: '2050',
-            accountCode: '2050',
-            accountName: 'ضريبة القيمة المضافة المستحقة (FTA 5%)',
-            debit: 0,
-            credit: invoiceData.vatAmount,
-            memo: 'ضريبة مخرجات 5%',
-          },
-        ],
-      };
-
       batch.set(doc(db, 'journalEntries', journalId), autoJournal);
-
-      // Update account balances
-      const updatedAccounts = [...accounts];
-      const debitAcc = updatedAccounts.find(a => a.code === debitAccountCode);
-      if (debitAcc) debitAcc.balance += invoiceData.grandTotal;
-      const revAcc = updatedAccounts.find(a => a.code === revenueAccountCode);
-      if (revAcc) revAcc.balance += invoiceData.subtotal;
-      const vatAcc = updatedAccounts.find(a => a.code === '2050');
-      if (vatAcc) vatAcc.balance += invoiceData.vatAmount;
-
       if (debitAcc) batch.update(doc(db, 'accounts', debitAcc.id), { balance: debitAcc.balance });
       if (revAcc) batch.update(doc(db, 'accounts', revAcc.id), { balance: revAcc.balance });
       if (vatAcc) batch.update(doc(db, 'accounts', vatAcc.id), { balance: vatAcc.balance });
-
       await batch.commit();
-
-      setSalesInvoices(prev => [newInvoice, ...prev]);
-      setJournalEntries(prev => [autoJournal, ...prev]);
-      setAccounts(updatedAccounts);
-    } catch {
-      setSalesInvoices(prev => [newInvoice, ...prev]);
+    } catch (err) {
+      console.warn('Firestore createSalesInvoice warning:', err);
     }
 
     return { invoiceId: id };
   };
 
-  // Customers & Suppliers & Employees
+  // Customers: Create, Update, Delete with dual persistence
   const createCustomer = async (c: Omit<Customer, 'id'>) => {
     const id = `cust_${Date.now()}`;
     const newC: Customer = { id, ...c };
-    try { await setDoc(doc(db, 'customers', id), newC); } catch {}
-    setCustomers(prev => [...prev, newC]);
+    const updated = [newC, ...customers];
+    setCustomers(updated);
+    setStoredCache('kashkha_customers_cache', updated);
+    try {
+      await setDoc(doc(db, 'customers', id), newC);
+    } catch (err) {
+      console.warn('Firestore createCustomer warning:', err);
+    }
   };
 
+  const updateCustomer = async (customerId: string, customerData: Partial<Customer>) => {
+    const updated = customers.map(c => (c.id === customerId ? { ...c, ...customerData } : c));
+    setCustomers(updated);
+    setStoredCache('kashkha_customers_cache', updated);
+    try {
+      await setDoc(doc(db, 'customers', customerId), customerData, { merge: true });
+    } catch (err) {
+      console.warn('Firestore updateCustomer warning:', err);
+    }
+  };
+
+  const deleteCustomer = async (customerId: string) => {
+    const updated = customers.filter(c => c.id !== customerId);
+    setCustomers(updated);
+    setStoredCache('kashkha_customers_cache', updated);
+    try {
+      await deleteDoc(doc(db, 'customers', customerId));
+    } catch (err) {
+      console.warn('Firestore deleteCustomer warning:', err);
+    }
+  };
+
+  // Suppliers: Create, Update, Delete with dual persistence
   const createSupplier = async (s: Omit<Supplier, 'id'>) => {
     const id = `supp_${Date.now()}`;
     const newS: Supplier = { id, ...s };
-    try { await setDoc(doc(db, 'suppliers', id), newS); } catch {}
-    setSuppliers(prev => [...prev, newS]);
+    const updated = [newS, ...suppliers];
+    setSuppliers(updated);
+    setStoredCache('kashkha_suppliers_cache', updated);
+    try {
+      await setDoc(doc(db, 'suppliers', id), newS);
+    } catch (err) {
+      console.warn('Firestore createSupplier warning:', err);
+    }
   };
 
+  const updateSupplier = async (supplierId: string, supplierData: Partial<Supplier>) => {
+    const updated = suppliers.map(s => (s.id === supplierId ? { ...s, ...supplierData } : s));
+    setSuppliers(updated);
+    setStoredCache('kashkha_suppliers_cache', updated);
+    try {
+      await setDoc(doc(db, 'suppliers', supplierId), supplierData, { merge: true });
+    } catch (err) {
+      console.warn('Firestore updateSupplier warning:', err);
+    }
+  };
+
+  const deleteSupplier = async (supplierId: string) => {
+    const updated = suppliers.filter(s => s.id !== supplierId);
+    setSuppliers(updated);
+    setStoredCache('kashkha_suppliers_cache', updated);
+    try {
+      await deleteDoc(doc(db, 'suppliers', supplierId));
+    } catch (err) {
+      console.warn('Firestore deleteSupplier warning:', err);
+    }
+  };
+
+  // Employees: Create, Update, Delete with dual persistence
   const createEmployee = async (e: Omit<Employee, 'id'>) => {
     const id = `emp_${Date.now()}`;
     const newE: Employee = { id, ...e };
-    try { await setDoc(doc(db, 'employees', id), newE); } catch {}
-    setEmployees(prev => [...prev, newE]);
+    const updated = [newE, ...employees];
+    setEmployees(updated);
+    setStoredCache('kashkha_employees_cache', updated);
+    try {
+      await setDoc(doc(db, 'employees', id), newE);
+    } catch (err) {
+      console.warn('Firestore createEmployee warning:', err);
+    }
+  };
+
+  const updateEmployee = async (employeeId: string, employeeData: Partial<Employee>) => {
+    const updated = employees.map(e => (e.id === employeeId ? { ...e, ...employeeData } : e));
+    setEmployees(updated);
+    setStoredCache('kashkha_employees_cache', updated);
+    try {
+      await setDoc(doc(db, 'employees', employeeId), employeeData, { merge: true });
+    } catch (err) {
+      console.warn('Firestore updateEmployee warning:', err);
+    }
+  };
+
+  const deleteEmployee = async (employeeId: string) => {
+    const updated = employees.filter(e => e.id !== employeeId);
+    setEmployees(updated);
+    setStoredCache('kashkha_employees_cache', updated);
+    try {
+      await deleteDoc(doc(db, 'employees', employeeId));
+    } catch (err) {
+      console.warn('Firestore deleteEmployee warning:', err);
+    }
   };
 
   return (
@@ -781,13 +1023,23 @@ export const ErpProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateModel,
         deleteModel,
         createProductionOrder,
+        updateProductionOrder,
+        deleteProductionOrder,
         advanceProductionStage,
         createInventoryItem,
+        updateInventoryItem,
+        deleteInventoryItem,
         adjustInventoryStock,
         createSalesInvoice,
         createCustomer,
+        updateCustomer,
+        deleteCustomer,
         createSupplier,
+        updateSupplier,
+        deleteSupplier,
         createEmployee,
+        updateEmployee,
+        deleteEmployee,
         resetToZeroState,
       }}
     >

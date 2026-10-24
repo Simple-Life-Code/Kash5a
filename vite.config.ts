@@ -14,7 +14,7 @@ export default defineConfig(() => {
         includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png'],
         manifest: false, // Served directly from public/manifest.json
         devOptions: {
-          enabled: true,
+          enabled: false,
         },
       }),
     ],

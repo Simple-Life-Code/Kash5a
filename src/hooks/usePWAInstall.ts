@@ -81,7 +81,20 @@ export function usePWAInstall() {
       return 'already_installed';
     }
 
-    const activePrompt = deferredPrompt || window.__deferredPwaPrompt;
+    let activePrompt = deferredPrompt || window.__deferredPwaPrompt;
+
+    if (!activePrompt) {
+      // Short grace period in case the event just fired
+      activePrompt = await new Promise<BeforeInstallPromptEvent | null>((resolve) => {
+        const timer = setTimeout(() => resolve(window.__deferredPwaPrompt || null), 500);
+        const onAvailable = () => {
+          clearTimeout(timer);
+          window.removeEventListener('pwa-prompt-available', onAvailable);
+          resolve(window.__deferredPwaPrompt || null);
+        };
+        window.addEventListener('pwa-prompt-available', onAvailable, { once: true });
+      });
+    }
 
     if (activePrompt) {
       try {
@@ -97,12 +110,17 @@ export function usePWAInstall() {
         return 'dismissed';
       } catch (err) {
         console.warn('Direct PWA prompt error:', err);
-        return 'manual_guide';
+        return 'dismissed';
       }
     }
 
-    // No native prompt available (iOS Safari, or already installed, or browser restriction)
-    return 'manual_guide';
+    // If standalone or already registered
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+      return 'already_installed';
+    }
+
+    return 'dismissed';
   }, [deferredPrompt, isInstalled]);
 
   return {

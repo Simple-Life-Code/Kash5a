@@ -75,7 +75,7 @@ service cloud.firestore {
       allow create, update: if isValidId(itemId)
         && incoming().sku is string && incoming().sku.size() <= 50
         && incoming().nameAr is string && incoming().nameAr.size() <= 100;
-      allow delete: if false;
+      allow delete: if isValidId(itemId);
     }
 
     // Stock Movement Audit Log (Immutable writes)
@@ -102,7 +102,7 @@ service cloud.firestore {
       allow create, update: if isValidId(customerId)
         && incoming().code is string && incoming().code.size() <= 30
         && incoming().name is string && incoming().name.size() <= 100;
-      allow delete: if false;
+      allow delete: if isValidId(customerId);
     }
 
     // Suppliers
@@ -111,7 +111,7 @@ service cloud.firestore {
       allow create, update: if isValidId(supplierId)
         && incoming().code is string && incoming().code.size() <= 30
         && incoming().companyName is string && incoming().companyName.size() <= 100;
-      allow delete: if false;
+      allow delete: if isValidId(supplierId);
     }
 
     // Employees
@@ -120,7 +120,7 @@ service cloud.firestore {
       allow create, update: if isValidId(employeeId)
         && incoming().empCode is string && incoming().empCode.size() <= 30
         && incoming().fullName is string && incoming().fullName.size() <= 100;
-      allow delete: if false;
+      allow delete: if isValidId(employeeId);
     }
   }
 }
