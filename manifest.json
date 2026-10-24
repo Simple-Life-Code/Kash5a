@@ -1,19 +1,21 @@
 {
   "id": "/",
-  "name": "Kashkha Fashions – Abaya Factory & Clothing ERP/POS",
-  "short_name": "Kashkha",
-  "description": "Enterprise ERP & POS management system for luxury abaya and garment ateliers in the United Arab Emirates.",
+  "name": "Kashkha Fashions | دار ومصنع كشخة للأزياء والعبايات",
+  "short_name": "Kashkha Fashions",
+  "description": "منظومة إدارة خطوط إنتاج العبايات الفاخرة، ومستودع الأقمشة، ونظام القيد المزدوج والمبيعات بدولة الإمارات.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0B0F17",
   "theme_color": "#0B0F17",
+  "categories": ["business", "finance", "shopping", "productivity"],
   "icons": [
     {
       "src": "/favicon.png",
-      "sizes": "64x64",
-      "type": "image/png"
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/pwa-192x192.png",
