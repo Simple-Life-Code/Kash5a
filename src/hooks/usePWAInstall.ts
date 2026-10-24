@@ -113,7 +113,7 @@ export function usePWAInstall() {
     // Grace period check for freshly dispatched prompt event
     if (!promptToUse) {
       promptToUse = await new Promise<BeforeInstallPromptEvent | null>((resolve) => {
-        const timer = setTimeout(() => resolve(window.__retajDeferredPrompt || window.__deferredPwaPrompt || null), 400);
+        const timer = setTimeout(() => resolve(window.__retajDeferredPrompt || window.__deferredPwaPrompt || null), 500);
         const onAvailable = () => {
           clearTimeout(timer);
           window.removeEventListener('pwa-prompt-available', onAvailable);
@@ -128,45 +128,34 @@ export function usePWAInstall() {
       try {
         await promptToUse.prompt();
         const choice = await promptToUse.userChoice;
-        if (choice.outcome === 'accepted') {
+        if (choice && choice.outcome === 'accepted') {
           setIsInstalled(true);
           setJustInstalled(true);
           setDeferredPrompt(null);
           window.__retajDeferredPrompt = null;
           window.__deferredPwaPrompt = null;
           setInstallStatus('installed');
-          return { success: true };
+          return { success: true, reason: 'installed' };
         } else {
-          setInstallStatus('dismissed');
-          return { success: false, reason: 'تم إلغاء التثبيت من قبل المستخدم' };
+          setInstallStatus('idle');
+          return { success: false, reason: 'dismissed' };
         }
       } catch (err) {
         console.warn('Direct installation error:', err);
         setInstallStatus('idle');
-        return { success: false, reason: 'حدث خطأ أثناء التثبيت' };
+        return { success: false, reason: 'prompt_failed' };
       }
     }
 
-    // Case 2: In Iframe
-    if (isInIframe) {
-      return { success: false, reason: 'iframe' };
-    }
-
-    // Case 3: iOS Safari
-    if (isIOS) {
-      return { success: false, reason: 'ios' };
-    }
-
-    // Case 4: Already installed
-    if (isInstalled || window.matchMedia('(display-mode: standalone)').matches) {
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as unknown as { standalone?: boolean }).standalone === true) {
       setIsInstalled(true);
       setJustInstalled(true);
       setInstallStatus('installed');
       return { success: true, reason: 'already_installed' };
     }
 
-    return { success: false, reason: 'manual_guide' };
-  }, [deferredPrompt, isInstalled, installStatus, isInIframe, isIOS]);
+    return { success: false, reason: 'not_ready' };
+  }, [deferredPrompt, isInstalled, installStatus]);
 
   return {
     isInstallable: !!(deferredPrompt || (typeof window !== 'undefined' && (window.__retajDeferredPrompt || window.__deferredPwaPrompt))),

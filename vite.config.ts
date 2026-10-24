@@ -11,6 +11,26 @@ export default defineConfig(() => {
     plugins: [
       react(),
       tailwindcss(),
+      {
+        name: 'serve-root-pwa-assets',
+        configureServer(server) {
+          server.middlewares.use((req, _res, next) => {
+            if (
+              req.url === '/manifest.json' ||
+              req.url === '/sw.js' ||
+              req.url?.startsWith('/pwa-') ||
+              req.url === '/favicon.ico' ||
+              req.url === '/favicon.png' ||
+              req.url === '/apple-touch-icon.png' ||
+              req.url === '/logo.jpg' ||
+              req.url === '/logo.png'
+            ) {
+              req.url = '/Kash5a' + req.url;
+            }
+            next();
+          });
+        },
+      },
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: [
@@ -20,7 +40,7 @@ export default defineConfig(() => {
         ],
         manifest: false,
         devOptions: {
-          enabled: true,
+          enabled: false,
         },
       }),
     ],

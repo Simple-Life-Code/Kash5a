@@ -1,26 +1,36 @@
 // Kashkha Fashions PWA Service Worker
-const CACHE_NAME = 'kashkha-fashions-v1';
+const CACHE_NAME = 'kashkha-fashions-v2';
+
+// Resolve base directory dynamically from service worker location
+const SW_SCOPE = self.registration.scope || self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/') + 1);
+
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.ico',
-  '/favicon.png',
-  '/apple-touch-icon.png',
-  '/logo.jpg',
-  '/logo.png',
-  '/pwa-192x192.png',
-  '/pwa-512x512.png',
-  '/pwa-maskable-512x512.png'
+  SW_SCOPE,
+  `${SW_SCOPE}index.html`,
+  `${SW_SCOPE}manifest.json`,
+  `${SW_SCOPE}favicon.ico`,
+  `${SW_SCOPE}favicon.png`,
+  `${SW_SCOPE}apple-touch-icon.png`,
+  `${SW_SCOPE}logo.jpg`,
+  `${SW_SCOPE}logo.png`,
+  `${SW_SCOPE}pwa-192x192.png`,
+  `${SW_SCOPE}pwa-512x512.png`,
+  `${SW_SCOPE}pwa-maskable-512x512.png`
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn('PWA: Some assets could not be precached', err);
-      });
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map((url) =>
+          fetch(url)
+            .then((res) => {
+              if (res.ok) return cache.put(url, res);
+            })
+            .catch(() => {})
+        )
+      );
     })
   );
 });
