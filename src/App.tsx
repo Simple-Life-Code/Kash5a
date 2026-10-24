@@ -16,6 +16,7 @@ import { Phone, MapPin, Mail, ExternalLink, ShieldCheck, Sparkles } from 'lucide
 import { LoginPage } from './components/LoginPage';
 import { LogoLoader } from './components/LogoLoader';
 import { useGlobalNavigation, registerGlobalModal } from './hooks/useGlobalNavigation';
+import appLogo from './assets/logo.jpg';
 
 const MainLayout: React.FC = () => {
   const { settings, activeTab, setActiveTab, isLoading, authLoading, isAuthorized } = useErp();
@@ -98,7 +99,10 @@ const MainLayout: React.FC = () => {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full overflow-hidden border border-[#C5A059] p-0.5 bg-[#131B26]">
                   <img
-                    src="/assets/aistudio/WhatsApp_Image_2026-10-20_at_12.35.18_PM_7bcbc7c9.jpeg"
+                    src={appLogo}
+                    onError={(e) => {
+                      e.currentTarget.src = '/logo.jpg';
+                    }}
                     alt="Kashkha Fashions"
                     className="w-full h-full object-cover rounded-full"
                   />

@@ -2,6 +2,7 @@ import React from 'react';
 import { useErp } from '../context/ErpContext';
 import { LogoLoader } from './LogoLoader';
 import { ShieldCheck, AlertCircle, Phone, Mail, MapPin, ExternalLink, Lock } from 'lucide-react';
+import appLogo from '../assets/logo.jpg';
 
 export const LoginPage: React.FC = () => {
   const { loginWithGoogle, isSigningIn, authError, clearAuthError } = useErp();
@@ -40,7 +41,10 @@ export const LoginPage: React.FC = () => {
             <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full p-1.5 border-2 border-[#C5A059]/60 bg-gradient-to-b from-[#1E293B] to-[#0A0E17] shadow-[0_0_35px_rgba(197,160,89,0.3)]">
               <div className="w-full h-full rounded-full overflow-hidden border border-[#E2C785] bg-black">
                 <img
-                  src="/assets/aistudio/WhatsApp_Image_2026-10-20_at_12.35.18_PM_7bcbc7c9.jpeg"
+                  src={appLogo}
+                  onError={(e) => {
+                    e.currentTarget.src = '/logo.jpg';
+                  }}
                   alt="Kashkha Fashions Logo"
                   className="w-full h-full object-cover rounded-full"
                 />

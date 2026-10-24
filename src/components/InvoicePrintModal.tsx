@@ -2,6 +2,7 @@ import React from 'react';
 import { useErp } from '../context/ErpContext';
 import { SalesInvoice } from '../types/erp';
 import { Printer, X } from 'lucide-react';
+import appLogo from '../assets/logo.jpg';
 
 export const InvoicePrintModal: React.FC<{
   invoice: SalesInvoice | null;
@@ -46,7 +47,10 @@ export const InvoicePrintModal: React.FC<{
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#C5A059] p-0.5 shrink-0 bg-white">
                 <img
-                  src="/assets/aistudio/WhatsApp_Image_2026-10-20_at_12.35.18_PM_7bcbc7c9.jpeg"
+                  src={appLogo}
+                  onError={(e) => {
+                    e.currentTarget.src = '/logo.jpg';
+                  }}
                   alt="Kashkha Fashion"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover rounded-full"
