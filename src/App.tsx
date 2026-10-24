@@ -71,7 +71,7 @@ const MainLayout: React.FC = () => {
       <Header />
 
       {/* Main Content Viewport */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 pb-24 md:pb-8">
         {activeTab === 'dashboard' && <DashboardHome />}
         {activeTab === 'accounting' && <AccountingView />}
         {activeTab === 'models' && <ModelsView />}
@@ -91,7 +91,7 @@ const MainLayout: React.FC = () => {
       )}
 
       {/* Comprehensive Official Business Footer */}
-      <footer className="border-t border-[#1E293B] bg-[#0A0E17] text-slate-400 mt-auto">
+      <footer className="border-t border-[#1E293B] bg-[#0A0E17] text-slate-400 mt-auto mb-16 md:mb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-8 border-b border-[#1E293B]">
             {/* Column 1: Identity */}

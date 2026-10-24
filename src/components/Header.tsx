@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
+import { BottomNavBar } from './BottomNavBar';
 import { registerGlobalModal } from '../hooks/useGlobalNavigation';
 import appLogo from '../assets/logo.jpg';
 
@@ -111,15 +112,15 @@ export const Header: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 bg-[#0B0F17]/95 backdrop-blur-md border-b border-[#1E293B]">
       {/* Top Utility & Brand Strip */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-3">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-3">
           
           {/* Zone 1: Luxury Logo & Brand (Kashkha Fashions) */}
           <div
             onClick={() => setActiveTab('dashboard')}
-            className="flex items-center gap-3 cursor-pointer group shrink-0"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group shrink-0 min-w-0"
           >
-            <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-[#C5A059]/50 bg-[#131B26] p-0.5 shadow-md shadow-[#C5A059]/15 group-hover:border-[#E2C785] transition-colors">
+            <div className="relative w-9 h-9 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-[#C5A059]/50 bg-[#131B26] p-0.5 shadow-md shadow-[#C5A059]/15 group-hover:border-[#E2C785] transition-colors shrink-0">
               <img
                 src={appLogo}
                 onError={(e) => {
@@ -130,16 +131,16 @@ export const Header: React.FC = () => {
                 className="w-full h-full object-cover rounded-full"
               />
             </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="text-lg sm:text-xl font-bold tracking-tight text-white group-hover:text-[#E2C785] transition-colors font-serif">
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-sm sm:text-xl font-bold tracking-tight text-white group-hover:text-[#E2C785] transition-colors font-serif truncate">
                   Kashkha Fashions
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#C5A059]/20 text-[#E2C785] border border-[#C5A059]/30">
+                <span className="hidden xs:inline text-[9px] sm:text-[10px] font-mono px-1 sm:px-1.5 py-0.5 rounded bg-[#C5A059]/20 text-[#E2C785] border border-[#C5A059]/30 shrink-0">
                   UAE
                 </span>
               </div>
-              <span className="text-[11px] text-[#C5A059] font-medium tracking-wide">
+              <span className="text-[10px] sm:text-[11px] text-[#C5A059] font-medium tracking-wide truncate">
                 كشخة فاشنز · دار ومصنع العبايات
               </span>
             </div>
@@ -168,10 +169,10 @@ export const Header: React.FC = () => {
           </nav>
 
           {/* Zone 3: Language, Business Settings & Actions */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Language Switcher */}
-            <div className="flex items-center bg-[#131B26] border border-[#1E293B] rounded-xl p-0.5 text-xs">
-              <Globe className="w-3.5 h-3.5 text-[#C5A059] mx-1 hidden sm:inline" />
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Language Switcher (hidden on mobile, managed in bottom sheet) */}
+            <div className="hidden md:flex items-center bg-[#131B26] border border-[#1E293B] rounded-xl p-0.5 text-xs">
+              <Globe className="w-3.5 h-3.5 text-[#C5A059] mx-1" />
               <button
                 onClick={() => setLang('ar')}
                 className={`px-2 py-1 rounded-lg transition-colors font-medium text-[11px] ${
@@ -211,9 +212,9 @@ export const Header: React.FC = () => {
             <button
               onClick={handleOpenSettings}
               title="بيانات المنشأة الرسمية والسجل التجاري"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C5A059]/15 hover:bg-[#C5A059]/25 text-[#E2C785] border border-[#C5A059]/40 rounded-xl text-xs font-semibold transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 bg-[#C5A059]/15 hover:bg-[#C5A059]/25 text-[#E2C785] border border-[#C5A059]/40 rounded-xl text-xs font-semibold transition-all shadow-sm cursor-pointer"
             >
-              <Building2 className="w-3.5 h-3.5 text-[#C5A059]" />
+              <Building2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-[#C5A059]" />
               <span className="hidden sm:inline">بيانات المنشأة</span>
             </button>
 
@@ -244,10 +245,10 @@ export const Header: React.FC = () => {
                 <button
                   onClick={() => setIsLogoutModalOpen(true)}
                   title="تسجيل الخروج من النظام"
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-300 hover:text-white bg-rose-950/30 hover:bg-rose-900/60 border border-rose-800/50 hover:border-rose-600 rounded-xl transition-all font-medium cursor-pointer shadow-sm active:scale-95"
+                  className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 text-xs text-rose-300 hover:text-white bg-rose-950/30 hover:bg-rose-900/60 border border-rose-800/50 hover:border-rose-600 rounded-xl transition-all font-medium cursor-pointer shadow-sm active:scale-95"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-rose-400" />
-                  <span className="text-[11px] font-semibold">خروج</span>
+                  <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-rose-400" />
+                  <span className="hidden sm:inline text-[11px] font-semibold">خروج</span>
                 </button>
               </div>
             )}
@@ -256,7 +257,7 @@ export const Header: React.FC = () => {
             <button
               onClick={() => setIsResetModalOpen(true)}
               title="تصفير البيانات والبدء بنظام فارغ"
-              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-[#131B26] rounded-xl transition-colors border border-transparent hover:border-[#1E293B] cursor-pointer"
+              className="hidden sm:flex p-2 text-slate-400 hover:text-rose-400 hover:bg-[#131B26] rounded-xl transition-colors border border-transparent hover:border-[#1E293B] cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -264,13 +265,9 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Sub-bar for Mobile / Tablet / Laptop horizontal scroll menu */}
-      <div className="2xl:hidden border-t border-[#1E293B] bg-[#0E1520] px-3 sm:px-6 overflow-x-auto py-2 scrollbar-none">
+      {/* Sub-bar for Tablet & Laptop horizontal scroll menu (hidden on mobile, handled by BottomNavBar) */}
+      <div className="hidden md:block 2xl:hidden border-t border-[#1E293B] bg-[#0E1520] px-3 sm:px-6 overflow-x-auto py-2 scrollbar-none">
         <div className="flex items-center gap-1.5 min-w-max mx-auto">
-          {/* Mobile direct install trigger */}
-          <div className="sm:hidden pr-1 border-l border-slate-700 ml-1">
-            <PWAInstallButton className="text-[11px] py-1 px-2.5 shadow-none" />
-          </div>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.key;
@@ -291,6 +288,13 @@ export const Header: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* Mobile Ergonomic Bottom Navigation Bar */}
+      <BottomNavBar
+        onOpenSettings={handleOpenSettings}
+        onOpenLogout={() => setIsLogoutModalOpen(true)}
+        onOpenReset={() => setIsResetModalOpen(true)}
+      />
 
       {/* Facility / Business Settings Modal rendered outside header stacking context via Portal */}
       {isSettingsModalOpen && typeof document !== 'undefined' && createPortal(

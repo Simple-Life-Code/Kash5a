@@ -665,7 +665,8 @@ export const ModelsView: React.FC = () => {
                   قائمة المواد ومكونات التفصيل (BOM):
                 </h4>
                 <div className="bg-[#131B26] border border-slate-800 rounded-xl overflow-hidden">
-                  <table className="w-full text-xs text-right">
+                  <div className="overflow-x-auto scrollbar-thin">
+                    <table className="w-full min-w-[460px] text-xs text-right">
                     <thead className="bg-[#0B0F17] text-slate-400 border-b border-slate-800">
                       <tr>
                         <th className="py-2 px-3">الخامة / القماش</th>
@@ -694,6 +695,7 @@ export const ModelsView: React.FC = () => {
                       )}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </div>
             </div>

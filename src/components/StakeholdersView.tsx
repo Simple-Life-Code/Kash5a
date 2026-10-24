@@ -122,7 +122,7 @@ export const StakeholdersView: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#1E293B] pb-2 text-xs font-semibold">
+      <div className="flex items-center gap-2 border-b border-[#1E293B] pb-2 text-xs font-semibold overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab('customers')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${

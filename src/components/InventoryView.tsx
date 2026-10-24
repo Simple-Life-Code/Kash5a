@@ -214,7 +214,8 @@ export const InventoryView: React.FC = () => {
 
       {/* Inventory Items Table */}
       <div className="bg-[#131B26] border border-[#1E293B] rounded-2xl overflow-hidden shadow-sm">
-        <table className="w-full text-xs text-right">
+        <div className="overflow-x-auto scrollbar-thin">
+          <table className="w-full min-w-[700px] text-xs text-right">
           <thead className="bg-[#0B0F17] text-slate-400 border-b border-[#1E293B]">
             <tr>
               <th className="py-3 px-4">رمز الصنف SKU</th>
@@ -277,6 +278,7 @@ export const InventoryView: React.FC = () => {
             })}
           </tbody>
         </table>
+        </div>
         {filteredItems.length === 0 && (
           <div className="text-center py-12 text-xs text-slate-500">
             لا توجد خامات مطابقة لخيارات البحث.

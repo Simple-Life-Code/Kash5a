@@ -162,7 +162,7 @@ export const DashboardHome: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 shrink-0">
             <button
               onClick={() => setActiveTab('sales')}
               className="flex items-center gap-2 px-4 py-2.5 bg-[#C5A059] hover:bg-[#E2C785] text-[#0B0F17] text-xs font-bold rounded-xl transition-all shadow-lg shadow-[#C5A059]/20"

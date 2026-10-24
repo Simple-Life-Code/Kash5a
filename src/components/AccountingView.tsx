@@ -311,42 +311,44 @@ export const AccountingView: React.FC = () => {
           </div>
 
           <div className="bg-[#131B26] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm">
-            <table className="w-full text-xs text-right rtl:text-right">
-              <thead className="bg-[#0B0F17] text-slate-400 border-b border-[#1E293B]">
-                <tr>
-                  <th className="py-2.5 px-4 font-semibold text-right">رمز الحساب</th>
-                  <th className="py-2.5 px-4 font-semibold text-right">اسم الحساب</th>
-                  <th className="py-2.5 px-4 font-semibold text-right">النوع / التبويب</th>
-                  <th className="py-2.5 px-4 font-semibold text-right">التصنيف</th>
-                  <th className="py-2.5 px-4 font-semibold text-left rtl:text-left">الرصيد الدفتري</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#1E293B] text-slate-200">
-                {accounts
-                  .filter(a =>
-                    a.code.includes(searchTerm) ||
-                    a.nameAr.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    a.nameEn.toLowerCase().includes(searchTerm.toLowerCase())
-                  )
-                  .map(acc => (
-                    <tr key={acc.id} className="hover:bg-[#182333] transition-colors">
-                      <td className="py-2.5 px-4 font-mono font-bold text-[#E2C785]">{acc.code}</td>
-                      <td className="py-2.5 px-4 font-medium">
-                        {lang === 'ar' ? acc.nameAr : lang === 'fr' ? acc.nameFr : acc.nameEn}
-                      </td>
-                      <td className="py-2.5 px-4">
-                        <span className="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                          {acc.type.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-4 text-slate-400">{acc.category}</td>
-                      <td className="py-2.5 px-4 font-mono font-bold text-left rtl:text-left text-white tabular-nums">
-                        {acc.balance.toLocaleString()} {t.currency}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto scrollbar-thin">
+              <table className="w-full min-w-[560px] text-xs text-right rtl:text-right">
+                <thead className="bg-[#0B0F17] text-slate-400 border-b border-[#1E293B]">
+                  <tr>
+                    <th className="py-2.5 px-4 font-semibold text-right">رمز الحساب</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">اسم الحساب</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">النوع / التبويب</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">التصنيف</th>
+                    <th className="py-2.5 px-4 font-semibold text-left rtl:text-left">الرصيد الدفتري</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1E293B] text-slate-200">
+                  {accounts
+                    .filter(a =>
+                      a.code.includes(searchTerm) ||
+                      a.nameAr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      a.nameEn.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map(acc => (
+                      <tr key={acc.id} className="hover:bg-[#182333] transition-colors">
+                        <td className="py-2.5 px-4 font-mono font-bold text-[#E2C785]">{acc.code}</td>
+                        <td className="py-2.5 px-4 font-medium">
+                          {lang === 'ar' ? acc.nameAr : lang === 'fr' ? acc.nameFr : acc.nameEn}
+                        </td>
+                        <td className="py-2.5 px-4">
+                          <span className="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
+                            {acc.type.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-4 text-slate-400">{acc.category}</td>
+                        <td className="py-2.5 px-4 font-mono font-bold text-left rtl:text-left text-white tabular-nums">
+                          {acc.balance.toLocaleString()} {t.currency}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -430,45 +432,47 @@ export const AccountingView: React.FC = () => {
           </div>
 
           <div className="bg-[#131B26] border border-[#1E293B] rounded-xl overflow-hidden">
-            <table className="w-full text-xs text-right">
-              <thead className="bg-[#0B0F17] text-slate-400 border-b border-[#1E293B]">
-                <tr>
-                  <th className="py-2.5 px-4">رمز الحساب</th>
-                  <th className="py-2.5 px-4">اسم الحساب</th>
-                  <th className="py-2.5 px-4 text-left rtl:text-left">أرصدة مدينة (Debit)</th>
-                  <th className="py-2.5 px-4 text-left rtl:text-left">أرصدة دائنة (Credit)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#1E293B] text-slate-200 font-mono">
-                {trialBalanceRows.map(row => (
-                  <tr key={row.id} className="hover:bg-[#182333]">
-                    <td className="py-2 px-4 font-bold text-[#E2C785]">{row.code}</td>
-                    <td className="py-2 px-4 font-sans font-medium">
-                      {lang === 'ar' ? row.nameAr : lang === 'fr' ? row.nameFr : row.nameEn}
+            <div className="overflow-x-auto scrollbar-thin">
+              <table className="w-full min-w-[560px] text-xs text-right">
+                <thead className="bg-[#0B0F17] text-slate-400 border-b border-[#1E293B]">
+                  <tr>
+                    <th className="py-2.5 px-4">رمز الحساب</th>
+                    <th className="py-2.5 px-4">اسم الحساب</th>
+                    <th className="py-2.5 px-4 text-left rtl:text-left">أرصدة مدينة (Debit)</th>
+                    <th className="py-2.5 px-4 text-left rtl:text-left">أرصدة دائنة (Credit)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1E293B] text-slate-200 font-mono">
+                  {trialBalanceRows.map(row => (
+                    <tr key={row.id} className="hover:bg-[#182333]">
+                      <td className="py-2 px-4 font-bold text-[#E2C785]">{row.code}</td>
+                      <td className="py-2 px-4 font-sans font-medium">
+                        {lang === 'ar' ? row.nameAr : lang === 'fr' ? row.nameFr : row.nameEn}
+                      </td>
+                      <td className="py-2 px-4 text-left rtl:text-left tabular-nums text-white">
+                        {row.debit > 0 ? `${row.debit.toLocaleString()} ${t.currency}` : '-'}
+                      </td>
+                      <td className="py-2 px-4 text-left rtl:text-left tabular-nums text-white">
+                        {row.credit > 0 ? `${row.credit.toLocaleString()} ${t.currency}` : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-[#0B0F17] border-t-2 border-[#C5A059]/40 font-mono font-bold text-sm text-white">
+                  <tr>
+                    <td colSpan={2} className="py-3 px-4 font-sans text-right">
+                      إجمالي ميزان المراجعة العام:
                     </td>
-                    <td className="py-2 px-4 text-left rtl:text-left tabular-nums text-white">
-                      {row.debit > 0 ? `${row.debit.toLocaleString()} ${t.currency}` : '-'}
+                    <td className="py-3 px-4 text-left rtl:text-left text-[#E2C785] tabular-nums">
+                      {sumTrialDebits.toLocaleString()} {t.currency}
                     </td>
-                    <td className="py-2 px-4 text-left rtl:text-left tabular-nums text-white">
-                      {row.credit > 0 ? `${row.credit.toLocaleString()} ${t.currency}` : '-'}
+                    <td className="py-3 px-4 text-left rtl:text-left text-[#E2C785] tabular-nums">
+                      {sumTrialCredits.toLocaleString()} {t.currency}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-[#0B0F17] border-t-2 border-[#C5A059]/40 font-mono font-bold text-sm text-white">
-                <tr>
-                  <td colSpan={2} className="py-3 px-4 font-sans text-right">
-                    إجمالي ميزان المراجعة العام:
-                  </td>
-                  <td className="py-3 px-4 text-left rtl:text-left text-[#E2C785] tabular-nums">
-                    {sumTrialDebits.toLocaleString()} {t.currency}
-                  </td>
-                  <td className="py-3 px-4 text-left rtl:text-left text-[#E2C785] tabular-nums">
-                    {sumTrialCredits.toLocaleString()} {t.currency}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+                </tfoot>
+              </table>
+            </div>
           </div>
         </div>
       )}

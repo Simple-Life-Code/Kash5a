@@ -135,13 +135,13 @@ export const ProductionView: React.FC = () => {
       </div>
 
       {/* 7-Stage Interactive Kanban Board */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3 overflow-x-auto pb-4">
+      <div className="flex lg:grid lg:grid-cols-7 gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin">
         {STAGES.map(s => {
           const ordersInStage = productionOrders.filter(o => o.currentStage === s.stage);
           return (
             <div
               key={s.stage}
-              className="bg-[#131B26] border border-[#1E293B] rounded-xl flex flex-col min-w-[210px] min-h-[480px]"
+              className="bg-[#131B26] border border-[#1E293B] rounded-xl flex flex-col w-[85vw] sm:w-[300px] lg:w-auto shrink-0 min-h-[440px] snap-center shadow-sm"
             >
               {/* Column Header */}
               <div className={`p-3 border-b rounded-t-xl font-medium text-xs flex items-center justify-between ${s.color}`}>

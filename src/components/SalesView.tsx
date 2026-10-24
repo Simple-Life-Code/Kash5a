@@ -247,7 +247,8 @@ export const SalesView: React.FC<{ onPrintInvoice: (inv: SalesInvoice) => void }
         </div>
 
         <div className="bg-[#131B26] border border-[#1E293B] rounded-2xl overflow-hidden shadow-sm">
-          <table className="w-full text-xs text-right">
+          <div className="overflow-x-auto scrollbar-thin">
+            <table className="w-full min-w-[700px] text-xs text-right">
             <thead className="bg-[#0B0F17] text-slate-400 border-b border-[#1E293B]">
               <tr>
                 <th className="py-3 px-4">رقم الفاتورة الضريبية</th>
@@ -303,6 +304,7 @@ export const SalesView: React.FC<{ onPrintInvoice: (inv: SalesInvoice) => void }
               ))}
             </tbody>
           </table>
+          </div>
           {filteredInvoices.length === 0 && (
             <div className="text-center py-12 text-xs text-slate-500">
               لم تسجل فواتير بعد. اضغط على زر "فاتورة بيع جديدة".
@@ -409,7 +411,8 @@ export const SalesView: React.FC<{ onPrintInvoice: (inv: SalesInvoice) => void }
 
             {/* Items Table */}
             <div className="border border-slate-800 rounded-xl overflow-hidden">
-              <table className="w-full text-xs text-right">
+              <div className="overflow-x-auto scrollbar-thin">
+                <table className="w-full min-w-[520px] text-xs text-right">
                 <thead className="bg-[#0B0F17] text-slate-400 border-b border-slate-800">
                   <tr>
                     <th className="py-2 px-3">الموديل</th>
@@ -477,6 +480,7 @@ export const SalesView: React.FC<{ onPrintInvoice: (inv: SalesInvoice) => void }
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
 
             {/* Bespoke Measurements & Notes Accordion */}
@@ -484,7 +488,7 @@ export const SalesView: React.FC<{ onPrintInvoice: (inv: SalesInvoice) => void }
               <span className="text-xs font-semibold text-slate-300 block">
                 مقاسات التفصيل الخاصة للزبون (Custom Abaya Tailoring Measurements - بالإنش):
               </span>
-              <div className="grid grid-cols-4 gap-2 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div>
                   <label className="text-[11px] text-slate-400 block mb-0.5">الطول الكامل</label>
                   <input
