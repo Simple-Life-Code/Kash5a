@@ -5,69 +5,95 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
+// Global window declaration for early event interception matching Retaj-Today
 declare global {
   interface Window {
+    __retajDeferredPrompt?: BeforeInstallPromptEvent | null;
     __deferredPwaPrompt?: BeforeInstallPromptEvent | null;
   }
 }
 
-export type InstallResult = 'accepted' | 'dismissed' | 'manual_guide' | 'already_installed';
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    const promptEvent = e as BeforeInstallPromptEvent;
+    window.__retajDeferredPrompt = promptEvent;
+    window.__deferredPwaPrompt = promptEvent;
+    window.dispatchEvent(new CustomEvent('pwa-prompt-available'));
+  });
+}
+
+export type InstallStatus = 'idle' | 'installing' | 'installed' | 'dismissed';
 
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
-    return typeof window !== 'undefined' ? window.__deferredPwaPrompt || null : null;
+    if (typeof window !== 'undefined') {
+      return window.__retajDeferredPrompt || window.__deferredPwaPrompt || null;
+    }
+    return null;
   });
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
   const [justInstalled, setJustInstalled] = useState<boolean>(false);
   const [isIOS, setIsIOS] = useState<boolean>(false);
+  const [isAndroid, setIsAndroid] = useState<boolean>(false);
+  const [isInIframe, setIsInIframe] = useState<boolean>(false);
+  const [installStatus, setInstallStatus] = useState<InstallStatus>('idle');
 
   useEffect(() => {
-    // 1. Check if running in standalone mode (already installed on phone or desktop)
-    const checkStandalone = () => {
-      const isStandaloneMode =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
-        document.referrer.includes('android-app://');
-      if (isStandaloneMode) {
-        setIsInstalled(true);
-      }
-    };
+    // 1. Check if running inside iframe
+    const inIframe = typeof window !== 'undefined' && window.self !== window.top;
+    setIsInIframe(inIframe);
 
-    checkStandalone();
+    // 2. Check if already in standalone/PWA mode (Phone Home Screen or Desktop App)
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+      document.referrer.includes('android-app://');
 
-    // 2. Check iOS platform
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const isAppleDevice = /iphone|ipad|ipod/.test(userAgent);
-    setIsIOS(isAppleDevice);
-
-    // 3. Check for early captured prompt
-    if (window.__deferredPwaPrompt) {
-      setDeferredPrompt(window.__deferredPwaPrompt);
+    if (isStandalone) {
+      setIsInstalled(true);
+      setInstallStatus('installed');
     }
 
+    // 3. Detect User Agent
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isIOSDevice = /iphone|ipad|ipod/.test(ua);
+    const isAndroidDevice = /android/.test(ua);
+    setIsIOS(isIOSDevice);
+    setIsAndroid(isAndroidDevice);
+
+    // 4. Capture prompt handlers
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
+      window.__retajDeferredPrompt = promptEvent;
       window.__deferredPwaPrompt = promptEvent;
       setDeferredPrompt(promptEvent);
     };
 
     const handlePromptAvailable = () => {
-      if (window.__deferredPwaPrompt) {
-        setDeferredPrompt(window.__deferredPwaPrompt);
+      const promptEvent = window.__retajDeferredPrompt || window.__deferredPwaPrompt;
+      if (promptEvent) {
+        setDeferredPrompt(promptEvent);
       }
     };
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setJustInstalled(true);
-      setDeferredPrompt(null);
+      setInstallStatus('installed');
+      window.__retajDeferredPrompt = null;
       window.__deferredPwaPrompt = null;
+      setDeferredPrompt(null);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('pwa-prompt-available', handlePromptAvailable);
     window.addEventListener('appinstalled', handleAppInstalled);
+
+    if (window.__retajDeferredPrompt || window.__deferredPwaPrompt) {
+      setDeferredPrompt(window.__retajDeferredPrompt || window.__deferredPwaPrompt || null);
+    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -76,58 +102,72 @@ export function usePWAInstall() {
     };
   }, []);
 
-  const triggerDirectInstall = useCallback(async (): Promise<InstallResult> => {
-    if (isInstalled) {
-      return 'already_installed';
+  // Direct Installation Engine: Triggers immediate native prompt without any secondary guide windows
+  const install = useCallback(async (): Promise<{ success: boolean; reason?: string }> => {
+    if (isInstalled || installStatus === 'installed') {
+      return { success: true, reason: 'already_installed' };
     }
 
-    let activePrompt = deferredPrompt || window.__deferredPwaPrompt;
+    let promptToUse = deferredPrompt || window.__retajDeferredPrompt || window.__deferredPwaPrompt;
 
-    if (!activePrompt) {
-      // Short grace period in case the event just fired
-      activePrompt = await new Promise<BeforeInstallPromptEvent | null>((resolve) => {
-        const timer = setTimeout(() => resolve(window.__deferredPwaPrompt || null), 500);
+    // Grace period check for freshly dispatched prompt event
+    if (!promptToUse) {
+      promptToUse = await new Promise<BeforeInstallPromptEvent | null>((resolve) => {
+        const timer = setTimeout(() => resolve(window.__retajDeferredPrompt || window.__deferredPwaPrompt || null), 400);
         const onAvailable = () => {
           clearTimeout(timer);
           window.removeEventListener('pwa-prompt-available', onAvailable);
-          resolve(window.__deferredPwaPrompt || null);
+          resolve(window.__retajDeferredPrompt || window.__deferredPwaPrompt || null);
         };
         window.addEventListener('pwa-prompt-available', onAvailable, { once: true });
       });
     }
 
-    if (activePrompt) {
+    if (promptToUse) {
+      setInstallStatus('installing');
       try {
-        await activePrompt.prompt();
-        const choice = await activePrompt.userChoice;
+        await promptToUse.prompt();
+        const choice = await promptToUse.userChoice;
         if (choice.outcome === 'accepted') {
           setIsInstalled(true);
           setJustInstalled(true);
           setDeferredPrompt(null);
+          window.__retajDeferredPrompt = null;
           window.__deferredPwaPrompt = null;
-          return 'accepted';
+          setInstallStatus('installed');
+          return { success: true };
+        } else {
+          setInstallStatus('dismissed');
+          return { success: false, reason: 'تم إلغاء التثبيت من قبل المستخدم' };
         }
-        return 'dismissed';
       } catch (err) {
-        console.warn('Direct PWA prompt error:', err);
-        return 'dismissed';
+        console.warn('Direct installation error:', err);
+        setInstallStatus('idle');
+        return { success: false, reason: 'حدث خطأ أثناء التثبيت' };
       }
     }
 
-    // If standalone or already registered
+    // Standalone check
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
-      return 'already_installed';
+      setJustInstalled(true);
+      setInstallStatus('installed');
+      return { success: true, reason: 'already_installed' };
     }
 
-    return 'dismissed';
-  }, [deferredPrompt, isInstalled]);
+    return { success: false, reason: 'ambient_ready' };
+  }, [deferredPrompt, isInstalled, installStatus]);
 
   return {
-    isInstallable: !!(deferredPrompt || (typeof window !== 'undefined' && window.__deferredPwaPrompt)),
-    isInstalled,
+    isInstallable: !!(deferredPrompt || (typeof window !== 'undefined' && (window.__retajDeferredPrompt || window.__deferredPwaPrompt))),
+    isInstalled: isInstalled || installStatus === 'installed',
     justInstalled,
     isIOS,
-    triggerDirectInstall,
+    isAndroid,
+    isInIframe,
+    installStatus,
+    install,
+    triggerDirectInstall: install,
+    deferredPrompt,
   };
 }

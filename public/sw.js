@@ -7,6 +7,8 @@ const ASSETS_TO_CACHE = [
   '/favicon.ico',
   '/favicon.png',
   '/apple-touch-icon.png',
+  '/logo.jpg',
+  '/logo.png',
   '/pwa-192x192.png',
   '/pwa-512x512.png',
   '/pwa-maskable-512x512.png'

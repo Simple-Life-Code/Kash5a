@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 import { registerGlobalModal } from '../hooks/useGlobalNavigation';
+import appLogo from '../assets/logo.jpg';
 
 export const Header: React.FC = () => {
   const {
@@ -120,7 +121,10 @@ export const Header: React.FC = () => {
           >
             <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-[#C5A059]/50 bg-[#131B26] p-0.5 shadow-md shadow-[#C5A059]/15 group-hover:border-[#E2C785] transition-colors">
               <img
-                src="/assets/aistudio/WhatsApp_Image_2026-10-20_at_12.35.18_PM_7bcbc7c9.jpeg"
+                src={appLogo}
+                onError={(e) => {
+                  e.currentTarget.src = '/logo.jpg';
+                }}
                 alt="Kashkha Fashions"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover rounded-full"

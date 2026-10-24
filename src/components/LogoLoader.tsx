@@ -1,4 +1,5 @@
 import React from 'react';
+import appLogo from '../assets/logo.jpg';
 
 interface LogoLoaderProps {
   title?: string;
@@ -28,7 +29,10 @@ export const LogoLoader: React.FC<LogoLoaderProps> = ({
       <div className={`relative ${sizeClasses} rounded-full p-1.5 border-2 border-[#C5A059]/50 bg-gradient-to-b from-[#1E293B] to-[#080C14] shadow-[0_0_55px_rgba(197,160,89,0.35)] transition-transform`}>
         <div className="w-full h-full rounded-full overflow-hidden border border-[#E2C785] bg-black shadow-inner">
           <img
-            src="/assets/aistudio/WhatsApp_Image_2026-10-20_at_12.35.18_PM_7bcbc7c9.jpeg"
+            src={appLogo}
+            onError={(e) => {
+              e.currentTarget.src = '/logo.jpg';
+            }}
             alt="Kashkha Fashions Logo"
             className="w-full h-full object-cover rounded-full"
           />
