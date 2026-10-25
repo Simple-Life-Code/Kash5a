@@ -58,33 +58,33 @@ export const PWAInstallButton: React.FC<Props> = ({
   // If already running standalone, show installed badge
   if (isInstalled || installStatus === 'installed') {
     return (
-      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 text-xs font-bold shadow-sm select-none ${className}`}>
-        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+      <div className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 text-xs font-bold shadow-sm select-none shrink-0 ${className}`}>
+        <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
         <span className="hidden sm:inline">التطبيق مثبت على الجهاز</span>
-        <span className="sm:hidden">تم التثبيت</span>
+        <span className="sm:hidden">مثبت</span>
       </div>
     );
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative shrink-0 ${className}`}>
       {variant === 'header' ? (
         <button
           onClick={handleDirectInstall}
           disabled={loading}
           title="تثبيت كشخة فاشنز مباشرة على سطح المكتب والشاشة الرئيسية"
-          className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all shadow-md shadow-rose-900/30 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 active:scale-95 text-white cursor-pointer disabled:opacity-75"
+          className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-xs font-bold transition-all shadow-md shadow-red-950/40 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 active:scale-95 text-white cursor-pointer disabled:opacity-75 shrink-0"
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-              <span>جاري التثبيت...</span>
+              <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin shrink-0" />
+              <span>جاري...</span>
             </>
           ) : (
             <>
-              <Download className="w-4 h-4 animate-bounce shrink-0" />
+              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-bounce shrink-0 text-white" />
               <span className="hidden sm:inline">تثبيت التطبيق على الجهاز</span>
-              <span className="sm:hidden">تثبيت التطبيق</span>
+              <span className="sm:hidden font-extrabold">تثبيت</span>
             </>
           )}
         </button>
@@ -111,7 +111,7 @@ export const PWAInstallButton: React.FC<Props> = ({
 
       {/* Subtle feedback message tooltip without any modal overlay */}
       {feedback && (
-        <div className="absolute top-full mt-2 right-0 sm:left-0 z-50 min-w-[240px] p-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-2xl border border-[#C5A059]/40 text-center animate-in fade-in slide-in-from-top-1">
+        <div className="absolute top-full mt-2 right-0 sm:left-0 z-50 min-w-[200px] sm:min-w-[240px] p-2 sm:p-2.5 bg-[#0B101B] text-white text-[11px] sm:text-xs font-bold rounded-xl shadow-2xl border border-[#C5A059]/50 text-center animate-in fade-in slide-in-from-top-1">
           {feedback}
         </div>
       )}

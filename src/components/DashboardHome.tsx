@@ -13,7 +13,9 @@ import {
   TrendingUp,
   AlertTriangle,
   Landmark,
+  Download,
 } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 export const DashboardHome: React.FC = () => {
   const {
@@ -179,6 +181,20 @@ export const DashboardHome: React.FC = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Prominent PWA Install Callout Banner */}
+      <div className="md:hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-red-950/70 via-rose-950/40 to-[#131B26] border border-red-500/50 shadow-lg flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-red-950/50">
+            <Download className="w-4 h-4 sm:w-5 sm:h-5 animate-bounce" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-xs font-bold text-white truncate">تثبيت كشخة فاشنز على هاتفك</div>
+            <div className="text-[10px] text-slate-300 mt-0.5 truncate">يعمل كتطبيق أصلي سريع بنقرة واحدة</div>
+          </div>
+        </div>
+        <PWAInstallButton variant="header" />
       </div>
 
       {/* Primary KPI Strip (Clean, genuine numbers without fake figures) */}

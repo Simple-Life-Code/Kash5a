@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useErp, ActiveTab } from '../context/ErpContext';
 import { getTranslation } from '../i18n/translations';
 import {
@@ -16,8 +17,9 @@ import {
   RotateCcw,
   X,
   ChevronRight,
-  ShieldCheck,
+  Download,
 } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface Props {
   onOpenSettings: () => void;
@@ -30,7 +32,7 @@ export const BottomNavBar: React.FC<Props> = ({
   onOpenLogout,
   onOpenReset,
 }) => {
-  const { lang, setLang, activeTab, setActiveTab, currentUser, isFirebaseConnected } = useErp();
+  const { lang, setLang, activeTab, setActiveTab, currentUser } = useErp();
   const t = getTranslation(lang);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
@@ -50,11 +52,15 @@ export const BottomNavBar: React.FC<Props> = ({
 
   const isMoreActive = ['accounting', 'inventory', 'employees', 'stakeholders'].includes(activeTab);
 
-  return (
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(
     <>
-      {/* Mobile Bottom Navigation Bar (Visible only on screens below 768px / md) */}
+      {/* Mobile Ergonomic Bottom Navigation Bar (Fixed strictly to viewport bottom via Portal) */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0A0E17]/95 backdrop-blur-xl border-t border-[#1E293B] shadow-[0_-4px_20px_rgba(0,0,0,0.5)] select-none"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-[#0A0E17]/95 backdrop-blur-xl border-t border-[#1E293B] shadow-[0_-4px_25px_rgba(0,0,0,0.85)] select-none"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         dir="rtl"
       >
@@ -116,27 +122,48 @@ export const BottomNavBar: React.FC<Props> = ({
         </div>
       </nav>
 
-      {/* "More" Slide-up Bottom Sheet Modal on Mobile */}
+      {/* "More" Slide-up Bottom Sheet Modal on Mobile - Fixed completely over entire viewport */}
       {isMoreMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end bg-black/80 backdrop-blur-xs animate-in fade-in" dir="rtl">
+        <div className="md:hidden fixed inset-0 z-[99999] flex flex-col justify-end bg-black/85 backdrop-blur-sm animate-in fade-in" dir="rtl">
           {/* Backdrop click dismiss */}
-          <div className="flex-1" onClick={() => setIsMoreMenuOpen(false)} />
+          <div className="flex-1" onClick={() => setIsMoreMenuOpen(false)} aria-label="إغلاق" />
 
-          <div className="bg-[#0E1523] border-t-2 border-[#C5A059]/50 rounded-t-3xl shadow-2xl p-4 space-y-4 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
+          <div
+            className="bg-[#0B101B] border-t-2 border-[#C5A059] rounded-t-3xl shadow-[0_-15px_50px_rgba(0,0,0,0.95)] p-4 sm:p-5 space-y-4 max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom duration-200"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}
+          >
             {/* Sheet Handle & Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#C5A059]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#C5A059] shadow-[0_0_8px_#C5A059]" />
                 <h3 className="text-sm font-bold text-white font-serif">
-                  أقسام وإعدادات النظام
+                  أقسام وإعدادات كشخة فاشنز
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setIsMoreMenuOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs cursor-pointer transition-colors"
+                title="إغلاق"
               >
                 <X className="w-4 h-4" />
               </button>
+            </div>
+
+            {/* Direct PWA Install Card inside More menu */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-red-950/70 via-rose-950/40 to-slate-900 border border-red-500/50 shadow-lg shadow-red-950/30">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-600 text-white flex items-center justify-center shadow-md shadow-red-900/50 shrink-0">
+                    <Download className="w-5 h-5 animate-bounce" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white">تثبيت التطبيق على جهازك</div>
+                    <div className="text-[10px] text-slate-300 mt-0.5">تشغيل فوري وسريع بدون شريط المتصفح</div>
+                  </div>
+                </div>
+                <PWAInstallButton variant="header" />
+              </div>
             </div>
 
             {/* Department Quick Links */}
@@ -214,7 +241,7 @@ export const BottomNavBar: React.FC<Props> = ({
                   setIsMoreMenuOpen(false);
                   onOpenSettings();
                 }}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-[#131B26] hover:bg-slate-800 border border-slate-800 text-xs text-slate-200 transition-colors"
+                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-[#131B26] hover:bg-slate-800 border border-slate-800 text-xs text-slate-200 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-[#C5A059]" />
@@ -226,8 +253,8 @@ export const BottomNavBar: React.FC<Props> = ({
               {/* User Profile Info & Logout */}
               {currentUser && (
                 <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs text-slate-300">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <div className="flex items-center gap-2 text-xs text-slate-300 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
                     <span className="font-mono text-[11px] truncate max-w-[170px]">
                       {currentUser.email || currentUser.displayName}
                     </span>
@@ -237,7 +264,7 @@ export const BottomNavBar: React.FC<Props> = ({
                       setIsMoreMenuOpen(false);
                       onOpenLogout();
                     }}
-                    className="flex items-center gap-1 text-xs text-rose-400 hover:text-rose-300 font-bold px-2.5 py-1 bg-rose-950/40 rounded-lg border border-rose-800/40"
+                    className="flex items-center gap-1 text-xs text-rose-400 hover:text-rose-300 font-bold px-2.5 py-1 bg-rose-950/40 rounded-lg border border-rose-800/40 cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>خروج</span>
@@ -251,7 +278,7 @@ export const BottomNavBar: React.FC<Props> = ({
                   setIsMoreMenuOpen(false);
                   onOpenReset();
                 }}
-                className="w-full flex items-center justify-center gap-2 p-2 rounded-xl text-slate-400 hover:text-amber-400 hover:bg-amber-950/20 text-xs transition-colors"
+                className="w-full flex items-center justify-center gap-2 p-2 rounded-xl text-slate-400 hover:text-amber-400 hover:bg-amber-950/20 text-xs transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>تصفير البيانات والبدء بنظام فارغ</span>
@@ -260,6 +287,7 @@ export const BottomNavBar: React.FC<Props> = ({
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body
   );
 };

@@ -118,9 +118,9 @@ export const Header: React.FC = () => {
           {/* Zone 1: Luxury Logo & Brand (Kashkha Fashions) */}
           <div
             onClick={() => setActiveTab('dashboard')}
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer group shrink-0 min-w-0"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group shrink min-w-0"
           >
-            <div className="relative w-9 h-9 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-[#C5A059]/50 bg-[#131B26] p-0.5 shadow-md shadow-[#C5A059]/15 group-hover:border-[#E2C785] transition-colors shrink-0">
+            <div className="relative w-8 h-8 sm:w-11 sm:h-11 rounded-full overflow-hidden border border-[#C5A059]/60 bg-[#131B26] p-0.5 shadow-md shadow-[#C5A059]/20 group-hover:border-[#E2C785] transition-colors shrink-0">
               <img
                 src={appLogo}
                 onError={(e) => {
@@ -131,17 +131,20 @@ export const Header: React.FC = () => {
                 className="w-full h-full object-cover rounded-full"
               />
             </div>
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-sm sm:text-xl font-bold tracking-tight text-white group-hover:text-[#E2C785] transition-colors font-serif truncate">
-                  Kashkha Fashions
+            <div className="flex flex-col min-w-0 justify-center">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="text-xs sm:text-base font-bold tracking-tight text-white group-hover:text-[#E2C785] transition-colors font-serif truncate">
+                  كشخة فاشنز
                 </span>
-                <span className="hidden xs:inline text-[9px] sm:text-[10px] font-mono px-1 sm:px-1.5 py-0.5 rounded bg-[#C5A059]/20 text-[#E2C785] border border-[#C5A059]/30 shrink-0">
+                <span className="hidden sm:inline text-xs text-slate-400 font-serif">
+                  · Kashkha
+                </span>
+                <span className="hidden md:inline text-[9px] font-mono px-1 py-0.5 rounded bg-[#C5A059]/20 text-[#E2C785] border border-[#C5A059]/30 shrink-0">
                   UAE
                 </span>
               </div>
-              <span className="text-[10px] sm:text-[11px] text-[#C5A059] font-medium tracking-wide truncate">
-                كشخة فاشنز · دار ومصنع العبايات
+              <span className="hidden xs:block text-[9px] sm:text-[11px] text-[#C5A059] font-medium tracking-wide truncate">
+                دار ومصنع أزياء العبايات
               </span>
             </div>
           </div>
@@ -205,14 +208,14 @@ export const Header: React.FC = () => {
               <span className="font-mono text-[11px]">النظام متصل</span>
             </div>
 
-            {/* PWA Direct Install Button */}
+            {/* PWA Direct Install Button (Visible on mobile & desktop) */}
             <PWAInstallButton />
 
             {/* Business Settings Modal Trigger */}
             <button
               onClick={handleOpenSettings}
               title="بيانات المنشأة الرسمية والسجل التجاري"
-              className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 bg-[#C5A059]/15 hover:bg-[#C5A059]/25 text-[#E2C785] border border-[#C5A059]/40 rounded-xl text-xs font-semibold transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-1 p-2 sm:px-3 sm:py-1.5 bg-[#C5A059]/15 hover:bg-[#C5A059]/25 text-[#E2C785] border border-[#C5A059]/40 rounded-xl text-xs font-semibold transition-all shadow-sm cursor-pointer shrink-0"
             >
               <Building2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-[#C5A059]" />
               <span className="hidden sm:inline">بيانات المنشأة</span>
@@ -220,7 +223,7 @@ export const Header: React.FC = () => {
 
             {/* Authenticated User & Logout */}
             {currentUser && (
-              <div className="flex items-center gap-1.5 pl-1 border-r border-[#1E293B]">
+              <div className="flex items-center gap-1 pl-0.5 sm:pl-1 border-r border-[#1E293B] shrink-0">
                 <div
                   title={currentUser.email || currentUser.displayName || ''}
                   className="hidden md:flex items-center gap-1.5 bg-[#131B26] border border-[#1E293B] rounded-xl px-2 py-1 text-xs"
@@ -245,7 +248,7 @@ export const Header: React.FC = () => {
                 <button
                   onClick={() => setIsLogoutModalOpen(true)}
                   title="تسجيل الخروج من النظام"
-                  className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 text-xs text-rose-300 hover:text-white bg-rose-950/30 hover:bg-rose-900/60 border border-rose-800/50 hover:border-rose-600 rounded-xl transition-all font-medium cursor-pointer shadow-sm active:scale-95"
+                  className="flex items-center gap-1 p-2 sm:px-3 sm:py-1.5 text-xs text-rose-300 hover:text-white bg-rose-950/30 hover:bg-rose-900/60 border border-rose-800/50 hover:border-rose-600 rounded-xl transition-all font-medium cursor-pointer shadow-sm active:scale-95 shrink-0"
                 >
                   <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-rose-400" />
                   <span className="hidden sm:inline text-[11px] font-semibold">خروج</span>
@@ -257,7 +260,7 @@ export const Header: React.FC = () => {
             <button
               onClick={() => setIsResetModalOpen(true)}
               title="تصفير البيانات والبدء بنظام فارغ"
-              className="hidden sm:flex p-2 text-slate-400 hover:text-rose-400 hover:bg-[#131B26] rounded-xl transition-colors border border-transparent hover:border-[#1E293B] cursor-pointer"
+              className="hidden sm:flex p-2 text-slate-400 hover:text-rose-400 hover:bg-[#131B26] rounded-xl transition-colors border border-transparent hover:border-[#1E293B] cursor-pointer shrink-0"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
